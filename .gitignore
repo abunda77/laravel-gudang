@@ -1,0 +1,133 @@
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# Laravel specific
+/bootstrap/cache/*.php
+/storage/framework/cache/*.php
+/storage/framework/sessions/*.php
+/storage/framework/testing/*.php
+/storage/framework/views/*.php
+/storage/logs/*.log
+
+# Environment files
+.env.local
+# Keep .env.example and .env.production.example in repo for reference
+
+# IDE and editor files
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Package manager files
+/package-lock.json
+/yarn.lock
+/composer.lock
+
+# Build assets
+/public/css/app.css
+/public/js/app.js
+/public/mix-manifest.json
+
+# Testing
+/tests/coverage/
+/phpunit.xml
+/.phpunit.cache
+
+# Laravel Telescope
+/telescope
+
+# Laravel Horizon
+/horizon
+
+# Laravel Pulse
+/pulse
+
+# Laravel Reverb
+/reverb
+
+# Laravel Octane
+/octane
+
+# Laravel Sail
+/docker-compose.yml
+/docker-compose.override.yml
+
+# Laravel Herd
+/herd
+
+# Laravel Valet
+/.valet
+
+# Laravel Forge
+/forge
+
+# Laravel Envoy
+/envoy.blade.php
+
+# Laravel Dusk
+/tests/Browser/console/*
+/tests/Browser/screenshots/*
+
+# Laravel Passport
+/passport-keys
+
+# Laravel Sanctum
+/sanctum
+
+# Laravel Cashier
+/cashier
+
+# Laravel Spark
+/spark
+
+# Laravel Vapor
+/vapor.yml
+
+# Laravel Nova
+/nova
+
+# Laravel Filament
+/filament
+
+# Backups
+/storage/backups/*.sql
+/storage/backups/*.sql.gz
+/backups/*.sql
+/backups/*.gz
+
+# Deployment
+.env.production
+
+temp-laravel/
+storage/
+.env.production

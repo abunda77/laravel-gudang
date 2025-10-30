@@ -1,0 +1,25 @@
+# Warehouse Management System - Crontab Configuration
+# 
+# Installation Instructions:
+# 1. Copy this file content
+# 2. Run: sudo crontab -e -u www-data
+# 3. Paste the content below
+# 4. Save and exit
+#
+# Note: Replace /var/www/warehouse-management-system with your actual project path
+
+# Laravel Scheduler - Runs every minute
+# This will execute all scheduled tasks defined in routes/console.php
+* * * * * cd /var/www/warehouse-management-system && php artisan schedule:run >> /dev/null 2>&1
+
+# Optional: Manual backup at specific time (if you want additional backup)
+# 0 2 * * * cd /var/www/warehouse-management-system && php artisan db:backup >> /var/log/warehouse-backup.log 2>&1
+
+# Optional: Clear old logs monthly
+# 0 3 1 * * cd /var/www/warehouse-management-system && php artisan log:clear --days=30 >> /dev/null 2>&1
+
+# Optional: Optimize database tables monthly
+# 0 4 1 * * mysql -u warehouse_user -p'your_password' warehouse_production -e "OPTIMIZE TABLE products, stock_movements, purchase_orders, sales_orders;" >> /dev/null 2>&1
+
+# Optional: Clear expired sessions weekly
+# 0 5 * * 0 cd /var/www/warehouse-management-system && php artisan session:gc >> /dev/null 2>&1
