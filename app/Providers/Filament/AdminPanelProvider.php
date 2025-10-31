@@ -2,15 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
-use Filament\Panel;
-use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
-use Filament\Navigation\NavigationGroup;
 use App\Filament\Widgets\InboundVsOutboundChart;
 use App\Filament\Widgets\LowStockTable;
 use App\Filament\Widgets\RecentActivityTable;
@@ -18,6 +9,15 @@ use App\Filament\Widgets\RecentOutboundTable;
 use App\Filament\Widgets\SalesChart;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\TopProductsTable;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
+use Filament\Pages\Dashboard;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -37,8 +37,19 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('Warehouse Management System')
-            ->brandLogo(asset('images/logo.png'))
-            ->brandLogoHeight('2rem')
+            ->brandLogo(function () {
+                // Check if Filament is in dark mode
+                $isDarkMode = (bool) (request()->cookie('filament_dark_mode') ?? false);
+                
+                if ($isDarkMode) {
+                    return asset('images/logo_dark.png');
+                } elseif (request()->cookie('filament_dark_mode') !== null) {
+                    return asset('images/logo_light.png');
+                }
+                
+                return asset('images/logo.png');
+            })
+            ->brandLogoHeight('4rem')
             ->favicon(asset('favicon.ico'))
             ->colors([
                 'primary' => Color::Blue,

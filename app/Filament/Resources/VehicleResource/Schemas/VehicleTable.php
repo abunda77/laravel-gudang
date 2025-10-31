@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources\VehicleResource\Schemas;
 
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -70,15 +75,16 @@ class VehicleTable
                     ])
                     ->native(false),
             ])
-            // ->actions([
-            //     Tables\Actions\EditAction::make(),
-            //     Tables\Actions\DeleteAction::make(),
-            // ])
-            // ->bulkActions([
-            //     Tables\Actions\BulkActionGroup::make([
-            //         Tables\Actions\DeleteBulkAction::make(),
-            //     ]),
-            // ])
+           ->recordActions([
+               ViewAction::make(),
+               EditAction::make(),
+               DeleteAction::make(),
+           ])
+           ->toolbarActions([
+               BulkActionGroup::make([
+                   DeleteBulkAction::make(),
+               ]),
+           ])
             ->defaultSort('created_at', 'desc');
     }
 }

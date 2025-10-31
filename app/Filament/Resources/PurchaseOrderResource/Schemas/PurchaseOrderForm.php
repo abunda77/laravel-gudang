@@ -82,7 +82,7 @@ class PurchaseOrderForm
                         ->schema([
                             Forms\Components\Select::make('product_id')
                                 ->label('Product')
-                                ->options(Product::query()->pluck('name', 'id'))
+                                ->options(fn () => Product::query()->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
                                 ->reactive()
@@ -95,13 +95,23 @@ class PurchaseOrderForm
                                     }
                                 })
                                 ->disableOptionWhen(function ($value, $state, callable $get) {
-                                    // Disable already selected products
+                                    // Disable products selected in other repeater rows (allow the current row's selection)
                                     $items = $get('../../items') ?? [];
 
-                                    return collect($items)
+                                    $selected = collect($items)
                                         ->pluck('product_id')
                                         ->filter()
-                                        ->contains($value);
+                                        ->values();
+
+                                    // Exclude the current field's selected value to avoid self-disabling
+                                    if ($state !== null) {
+                                        $index = $selected->search($state, true);
+                                        if ($index !== false) {
+                                            $selected->forget($index);
+                                        }
+                                    }
+
+                                    return $selected->containsStrict($value);
                                 })
                                 ->columnSpan(2),
 
