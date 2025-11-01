@@ -1,84 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\SalesOrder;
-use App\Models\User;
-use App\Enums\SalesOrderStatus;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SalesOrderPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('view_sales_orders');
+        return $authUser->can('ViewAny:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, SalesOrder $salesOrder): bool
+    public function view(AuthUser $authUser, SalesOrder $salesOrder): bool
     {
-        return $user->hasPermissionTo('view_sales_orders');
+        return $authUser->can('View:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('create_sales_orders');
+        return $authUser->can('Create:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, SalesOrder $salesOrder): bool
+    public function update(AuthUser $authUser, SalesOrder $salesOrder): bool
     {
-        // Only allow editing draft sales orders
-        if ($salesOrder->status !== SalesOrderStatus::DRAFT) {
-            return false;
-        }
-
-        return $user->hasPermissionTo('edit_sales_orders');
+        return $authUser->can('Update:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, SalesOrder $salesOrder): bool
+    public function delete(AuthUser $authUser, SalesOrder $salesOrder): bool
     {
-        // Only allow deleting draft sales orders
-        if ($salesOrder->status !== SalesOrderStatus::DRAFT) {
-            return false;
-        }
-
-        return $user->hasPermissionTo('delete_sales_orders');
+        return $authUser->can('Delete:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can approve the sales order.
-     */
-    public function approve(User $user, SalesOrder $salesOrder): bool
+    public function restore(AuthUser $authUser, SalesOrder $salesOrder): bool
     {
-        return $user->hasPermissionTo('approve_sales_orders');
+        return $authUser->can('Restore:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, SalesOrder $salesOrder): bool
+    public function forceDelete(AuthUser $authUser, SalesOrder $salesOrder): bool
     {
-        return $user->hasPermissionTo('delete_sales_orders');
+        return $authUser->can('ForceDelete:SalesOrder');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, SalesOrder $salesOrder): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('delete_sales_orders');
+        return $authUser->can('ForceDeleteAny:SalesOrder');
     }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:SalesOrder');
+    }
+
+    public function replicate(AuthUser $authUser, SalesOrder $salesOrder): bool
+    {
+        return $authUser->can('Replicate:SalesOrder');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:SalesOrder');
+    }
+
 }

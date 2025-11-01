@@ -14,6 +14,7 @@ class StockMovement extends Model
 
     protected $fillable = [
         'product_id',
+        'product_variant_id',
         'quantity',
         'type',
         'reference_type',
@@ -33,6 +34,14 @@ class StockMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the product variant that this stock movement belongs to (optional).
+     */
+    public function productVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class);
     }
 
     /**

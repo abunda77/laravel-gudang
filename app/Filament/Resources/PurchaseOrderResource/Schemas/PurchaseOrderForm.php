@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PurchaseOrderResource\Schemas;
 
 use App\Enums\PurchaseOrderStatus;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -86,34 +87,61 @@ class PurchaseOrderForm
                                 ->searchable()
                                 ->required()
                                 ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set) {
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    // Reset variant when product changes
+                                    $set('product_variant_id', null);
+                                    
                                     if ($state) {
-                                        $product = Product::find($state);
+                                        $product = Product::with('variants')->find($state);
                                         if ($product) {
                                             $set('unit_price', $product->purchase_price);
+                                            
+                                            // If product has only one variant, auto-select it
+                                            if ($product->variants->count() === 1) {
+                                                $set('product_variant_id', $product->variants->first()->id);
+                                            }
                                         }
                                     }
                                 })
-                                ->disableOptionWhen(function ($value, $state, callable $get) {
-                                    // Disable products selected in other repeater rows (allow the current row's selection)
-                                    $items = $get('../../items') ?? [];
-
-                                    $selected = collect($items)
-                                        ->pluck('product_id')
-                                        ->filter()
-                                        ->values();
-
-                                    // Exclude the current field's selected value to avoid self-disabling
-                                    if ($state !== null) {
-                                        $index = $selected->search($state, true);
-                                        if ($index !== false) {
-                                            $selected->forget($index);
-                                        }
+                                ->columnSpan(1),
+                            
+                            Forms\Components\Select::make('product_variant_id')
+                                ->label('Variant')
+                                ->options(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return [];
                                     }
-
-                                    return $selected->containsStrict($value);
+                                    
+                                    $product = Product::with('variants')->find($productId);
+                                    if (!$product || $product->variants->isEmpty()) {
+                                        return [];
+                                    }
+                                    
+                                    return $product->variants->pluck('name', 'id');
                                 })
-                                ->columnSpan(2),
+                                ->searchable()
+                                ->reactive()
+                                ->visible(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return false;
+                                    }
+                                    
+                                    $product = Product::with('variants')->find($productId);
+                                    return $product && $product->variants->isNotEmpty();
+                                })
+                                ->required(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return false;
+                                    }
+                                    
+                                    $product = Product::with('variants')->find($productId);
+                                    return $product && $product->variants->isNotEmpty();
+                                })
+                                ->helperText('Select product variant')
+                                ->columnSpan(1),
 
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Quantity')
@@ -152,12 +180,23 @@ class PurchaseOrderForm
                                 })
                                 ->columnSpan(1),
                         ])
-                        ->columns(5)
+                        ->columns(6)
                         ->defaultItems(1)
                         ->addActionLabel('Add Product')
                         ->collapsible()
-                        ->itemLabel(fn (array $state): ?string => isset($state['product_id'])
-                                ? Product::find($state['product_id'])?->name
+                        ->itemLabel(fn (array $state): ?string => 
+                            isset($state['product_id']) 
+                                ? (function() use ($state) {
+                                    $product = Product::find($state['product_id']);
+                                    if (!$product) return null;
+                                    
+                                    if (isset($state['product_variant_id']) && $state['product_variant_id']) {
+                                        $variant = ProductVariant::find($state['product_variant_id']);
+                                        return $variant ? $product->name . ' - ' . $variant->name : $product->name;
+                                    }
+                                    
+                                    return $product->name;
+                                })()
                                 : null
                         )
                         ->reorderable(false)

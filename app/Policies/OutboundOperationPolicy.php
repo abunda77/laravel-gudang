@@ -1,73 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\OutboundOperation;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class OutboundOperationPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('view_outbound_operations');
+        return $authUser->can('ViewAny:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, OutboundOperation $outboundOperation): bool
+    public function view(AuthUser $authUser, OutboundOperation $outboundOperation): bool
     {
-        return $user->hasPermissionTo('view_outbound_operations');
+        return $authUser->can('View:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('create_outbound_operations');
+        return $authUser->can('Create:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, OutboundOperation $outboundOperation): bool
+    public function update(AuthUser $authUser, OutboundOperation $outboundOperation): bool
     {
-        return $user->hasPermissionTo('edit_outbound_operations');
+        return $authUser->can('Update:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, OutboundOperation $outboundOperation): bool
+    public function delete(AuthUser $authUser, OutboundOperation $outboundOperation): bool
     {
-        return $user->hasPermissionTo('delete_outbound_operations');
+        return $authUser->can('Delete:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can confirm the outbound operation.
-     */
-    public function confirm(User $user, OutboundOperation $outboundOperation): bool
+    public function restore(AuthUser $authUser, OutboundOperation $outboundOperation): bool
     {
-        return $user->hasPermissionTo('confirm_outbound_operations');
+        return $authUser->can('Restore:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, OutboundOperation $outboundOperation): bool
+    public function forceDelete(AuthUser $authUser, OutboundOperation $outboundOperation): bool
     {
-        return $user->hasPermissionTo('delete_outbound_operations');
+        return $authUser->can('ForceDelete:OutboundOperation');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, OutboundOperation $outboundOperation): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('delete_outbound_operations');
+        return $authUser->can('ForceDeleteAny:OutboundOperation');
     }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:OutboundOperation');
+    }
+
+    public function replicate(AuthUser $authUser, OutboundOperation $outboundOperation): bool
+    {
+        return $authUser->can('Replicate:OutboundOperation');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:OutboundOperation');
+    }
+
 }

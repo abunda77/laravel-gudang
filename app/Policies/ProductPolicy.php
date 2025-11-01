@@ -1,65 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Product;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('view_products');
+        return $authUser->can('ViewAny:Product');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Product $product): bool
+    public function view(AuthUser $authUser, Product $product): bool
     {
-        return $user->hasPermissionTo('view_products');
+        return $authUser->can('View:Product');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('create_products');
+        return $authUser->can('Create:Product');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Product $product): bool
+    public function update(AuthUser $authUser, Product $product): bool
     {
-        return $user->hasPermissionTo('edit_products');
+        return $authUser->can('Update:Product');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Product $product): bool
+    public function delete(AuthUser $authUser, Product $product): bool
     {
-        return $user->hasPermissionTo('delete_products');
+        return $authUser->can('Delete:Product');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Product $product): bool
+    public function restore(AuthUser $authUser, Product $product): bool
     {
-        return $user->hasPermissionTo('delete_products');
+        return $authUser->can('Restore:Product');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Product $product): bool
+    public function forceDelete(AuthUser $authUser, Product $product): bool
     {
-        return $user->hasPermissionTo('delete_products');
+        return $authUser->can('ForceDelete:Product');
     }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:Product');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:Product');
+    }
+
+    public function replicate(AuthUser $authUser, Product $product): bool
+    {
+        return $authUser->can('Replicate:Product');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:Product');
+    }
+
 }

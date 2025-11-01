@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InboundOperationResource\Schemas;
 
 use App\Enums\PurchaseOrderStatus;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\PurchaseOrder;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
@@ -42,11 +43,12 @@ class InboundOperationForm
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             if ($state) {
-                                $purchaseOrder = PurchaseOrder::with('items.product')->find($state);
+                                $purchaseOrder = PurchaseOrder::with('items.product.variants', 'items.productVariant')->find($state);
                                 if ($purchaseOrder) {
                                     $items = $purchaseOrder->items->map(function ($item) {
                                         return [
                                             'product_id' => $item->product_id,
+                                            'product_variant_id' => $item->product_variant_id,
                                             'ordered_quantity' => $item->ordered_quantity,
                                             'received_quantity' => $item->ordered_quantity, // Default to ordered quantity
                                         ];
@@ -86,7 +88,23 @@ class InboundOperationForm
                                 ->required()
                                 ->disabled()
                                 ->dehydrated()
-                                ->columnSpan(2),
+                                ->columnSpan(1),
+                            
+                            Forms\Components\Select::make('product_variant_id')
+                                ->label('Variant')
+                                ->options(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return [];
+                                    }
+                                    return ProductVariant::where('product_id', $productId)
+                                        ->pluck('name', 'id');
+                                })
+                                ->searchable()
+                                ->disabled()
+                                ->dehydrated()
+                                ->visible(fn (callable $get) => $get('product_variant_id') !== null)
+                                ->columnSpan(1),
                             
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Ordered Qty')
@@ -136,7 +154,7 @@ class InboundOperationForm
                                 })
                                 ->columnSpan(1),
                         ])
-                        ->columns(5)
+                        ->columns(6)
                         ->defaultItems(0)
                         ->addable(false)
                         ->deletable(false)
@@ -144,7 +162,17 @@ class InboundOperationForm
                         ->collapsible()
                         ->itemLabel(fn (array $state): ?string => 
                             isset($state['product_id']) 
-                                ? Product::find($state['product_id'])?->name 
+                                ? (function() use ($state) {
+                                    $product = Product::find($state['product_id']);
+                                    if (!$product) return null;
+                                    
+                                    if (isset($state['product_variant_id']) && $state['product_variant_id']) {
+                                        $variant = ProductVariant::find($state['product_variant_id']);
+                                        return $variant ? $product->name . ' - ' . $variant->name : $product->name;
+                                    }
+                                    
+                                    return $product->name;
+                                })()
                                 : null
                         )
                         ->columnSpanFull(),

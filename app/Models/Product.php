@@ -72,10 +72,22 @@ class Product extends Model
     /**
      * Get current stock quantity from sum of all stock movements.
      * Uses cached value from StockMovementService for better performance.
+     * 
+     * For products with variants, this returns the sum of all variant stocks.
+     * For products without variants, this returns the product's own stock.
      */
     public function getCurrentStock(): int
     {
         $stockService = app(\App\Services\StockMovementService::class);
+        
+        // If product has variants, sum all variant stocks
+        if ($this->variants()->exists()) {
+            return $this->variants->sum(function ($variant) use ($stockService) {
+                return $stockService->getCurrentStockForVariant($variant);
+            });
+        }
+        
+        // Otherwise, return product's own stock
         return $stockService->getCurrentStock($this);
     }
 

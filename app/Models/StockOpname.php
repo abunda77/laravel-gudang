@@ -34,7 +34,7 @@ class StockOpname extends Model
             if (empty($model->opname_number)) {
                 $model->opname_number = static::generateUniqueNumber('OPN', 'opname_number');
             }
-            
+
             if (empty($model->created_by)) {
                 $model->created_by = auth()->id();
             }
@@ -45,9 +45,8 @@ class StockOpname extends Model
      * Generate unique document number with duplicate prevention.
      * Uses database locking to prevent race conditions.
      *
-     * @param string $prefix Document prefix (e.g., 'OPN')
-     * @param string $column Column name for the document number
-     * @return string
+     * @param  string  $prefix  Document prefix (e.g., 'OPN')
+     * @param  string  $column  Column name for the document number
      */
     protected static function generateUniqueNumber(string $prefix, string $column): string
     {
@@ -72,7 +71,7 @@ class StockOpname extends Model
                 // Check if this number already exists
                 $exists = static::where($column, $documentNumber)->exists();
 
-                if (!$exists) {
+                if (! $exists) {
                     return $documentNumber;
                 }
 

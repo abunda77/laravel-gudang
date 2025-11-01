@@ -1,65 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Invoice;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class InvoicePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('view_invoices');
+        return $authUser->can('ViewAny:Invoice');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Invoice $invoice): bool
+    public function view(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $user->hasPermissionTo('view_invoices');
+        return $authUser->can('View:Invoice');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('create_invoices');
+        return $authUser->can('Create:Invoice');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Invoice $invoice): bool
+    public function update(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $user->hasPermissionTo('edit_invoices');
+        return $authUser->can('Update:Invoice');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Invoice $invoice): bool
+    public function delete(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $user->hasPermissionTo('delete_invoices');
+        return $authUser->can('Delete:Invoice');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Invoice $invoice): bool
+    public function restore(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $user->hasPermissionTo('delete_invoices');
+        return $authUser->can('Restore:Invoice');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Invoice $invoice): bool
+    public function forceDelete(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $user->hasPermissionTo('delete_invoices');
+        return $authUser->can('ForceDelete:Invoice');
     }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:Invoice');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:Invoice');
+    }
+
+    public function replicate(AuthUser $authUser, Invoice $invoice): bool
+    {
+        return $authUser->can('Replicate:Invoice');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:Invoice');
+    }
+
 }

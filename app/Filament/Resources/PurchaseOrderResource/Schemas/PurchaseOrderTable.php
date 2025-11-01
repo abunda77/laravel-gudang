@@ -8,7 +8,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms as Forms;
+use Filament\Forms;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,24 +26,24 @@ class PurchaseOrderTable
                     ->sortable()
                     ->copyable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('supplier.name')
                     ->label('Supplier')
                     ->searchable()
                     ->sortable()
                     ->wrap(),
-                
+
                 Tables\Columns\TextColumn::make('order_date')
                     ->label('Order Date')
                     ->date()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('expected_date')
                     ->label('Expected Date')
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -62,7 +62,7 @@ class PurchaseOrderTable
                         PurchaseOrderStatus::CANCELLED => 'Cancelled',
                     })
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('total_amount')
                     ->label('Total Amount')
                     ->money('IDR')
@@ -72,11 +72,11 @@ class PurchaseOrderTable
                             ->money('IDR')
                             ->label('Total'),
                     ]),
-                
+
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Created By')
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
@@ -94,13 +94,13 @@ class PurchaseOrderTable
                         PurchaseOrderStatus::CANCELLED->value => 'Cancelled',
                     ])
                     ->multiple(),
-                
+
                 Tables\Filters\SelectFilter::make('supplier')
                     ->relationship('supplier', 'name')
                     ->label('Supplier')
                     ->preload()
                     ->multiple(),
-                
+
                 Tables\Filters\Filter::make('order_date')
                     ->form([
                         Forms\Components\DatePicker::make('order_from')

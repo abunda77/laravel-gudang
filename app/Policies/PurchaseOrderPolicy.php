@@ -1,84 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\PurchaseOrder;
-use App\Models\User;
-use App\Enums\PurchaseOrderStatus;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PurchaseOrderPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('view_purchase_orders');
+        return $authUser->can('ViewAny:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, PurchaseOrder $purchaseOrder): bool
+    public function view(AuthUser $authUser, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->hasPermissionTo('view_purchase_orders');
+        return $authUser->can('View:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('create_purchase_orders');
+        return $authUser->can('Create:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, PurchaseOrder $purchaseOrder): bool
+    public function update(AuthUser $authUser, PurchaseOrder $purchaseOrder): bool
     {
-        // Only allow editing draft purchase orders
-        if ($purchaseOrder->status !== PurchaseOrderStatus::DRAFT) {
-            return false;
-        }
-
-        return $user->hasPermissionTo('edit_purchase_orders');
+        return $authUser->can('Update:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, PurchaseOrder $purchaseOrder): bool
+    public function delete(AuthUser $authUser, PurchaseOrder $purchaseOrder): bool
     {
-        // Only allow deleting draft purchase orders
-        if ($purchaseOrder->status !== PurchaseOrderStatus::DRAFT) {
-            return false;
-        }
-
-        return $user->hasPermissionTo('delete_purchase_orders');
+        return $authUser->can('Delete:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can approve the purchase order.
-     */
-    public function approve(User $user, PurchaseOrder $purchaseOrder): bool
+    public function restore(AuthUser $authUser, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->hasPermissionTo('approve_purchase_orders');
+        return $authUser->can('Restore:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, PurchaseOrder $purchaseOrder): bool
+    public function forceDelete(AuthUser $authUser, PurchaseOrder $purchaseOrder): bool
     {
-        return $user->hasPermissionTo('delete_purchase_orders');
+        return $authUser->can('ForceDelete:PurchaseOrder');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, PurchaseOrder $purchaseOrder): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->hasPermissionTo('delete_purchase_orders');
+        return $authUser->can('ForceDeleteAny:PurchaseOrder');
     }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:PurchaseOrder');
+    }
+
+    public function replicate(AuthUser $authUser, PurchaseOrder $purchaseOrder): bool
+    {
+        return $authUser->can('Replicate:PurchaseOrder');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:PurchaseOrder');
+    }
+
 }

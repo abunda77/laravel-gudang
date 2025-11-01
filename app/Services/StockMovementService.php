@@ -7,6 +7,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\InboundOperation;
 use App\Models\OutboundOperation;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\StockOpname;
 use Illuminate\Support\Facades\Cache;
@@ -42,6 +43,7 @@ class StockMovementService
 
                     StockMovement::create([
                         'product_id' => $item['product_id'],
+                        'product_variant_id' => $item['product_variant_id'] ?? null,
                         'quantity' => $item['received_quantity'],
                         'type' => StockMovementType::INBOUND,
                         'reference_type' => InboundOperation::class,
@@ -50,8 +52,8 @@ class StockMovementService
                         'created_by' => auth()->id(),
                     ]);
 
-                    // Invalidate cache for this product
-                    $this->invalidateStockCache($item['product_id']);
+                    // Invalidate cache for this product and variant
+                    $this->invalidateStockCache($item['product_id'], $item['product_variant_id'] ?? null);
                 }
             });
 
@@ -103,13 +105,26 @@ class StockMovementService
                 }
 
                 $product = Product::findOrFail($item['product_id']);
-                $currentStock = $this->getCurrentStock($product);
+                $variantId = $item['product_variant_id'] ?? null;
+                
+                // Get stock for variant if specified, otherwise for product
+                if ($variantId) {
+                    $variant = ProductVariant::findOrFail($variantId);
+                    $currentStock = $this->getCurrentStockForVariant($variant);
+                    $itemName = $product->name . ' - ' . $variant->name;
+                    $itemSku = $variant->sku;
+                } else {
+                    $currentStock = $this->getCurrentStock($product);
+                    $itemName = $product->name;
+                    $itemSku = $product->sku;
+                }
 
                 if ($currentStock < $item['shipped_quantity']) {
                     $unavailableItems[] = [
                         'product_id' => $product->id,
-                        'product_name' => $product->name,
-                        'product_sku' => $product->sku,
+                        'product_variant_id' => $variantId,
+                        'product_name' => $itemName,
+                        'product_sku' => $itemSku,
                         'required' => $item['shipped_quantity'],
                         'available' => $currentStock,
                         'shortage' => $item['shipped_quantity'] - $currentStock,
@@ -127,6 +142,7 @@ class StockMovementService
                 foreach ($items as $item) {
                     StockMovement::create([
                         'product_id' => $item['product_id'],
+                        'product_variant_id' => $item['product_variant_id'] ?? null,
                         'quantity' => -$item['shipped_quantity'], // Negative for outbound
                         'type' => StockMovementType::OUTBOUND,
                         'reference_type' => OutboundOperation::class,
@@ -135,8 +151,8 @@ class StockMovementService
                         'created_by' => auth()->id(),
                     ]);
 
-                    // Invalidate cache for this product
-                    $this->invalidateStockCache($item['product_id']);
+                    // Invalidate cache for this product and variant
+                    $this->invalidateStockCache($item['product_id'], $item['product_variant_id'] ?? null);
                 }
             });
 
@@ -189,6 +205,7 @@ class StockMovementService
 
                 StockMovement::create([
                     'product_id' => $product->id,
+                    'product_variant_id' => null, // Stock opname currently doesn't support variants
                     'quantity' => $variance,
                     'type' => $type,
                     'reference_type' => StockOpname::class,
@@ -198,7 +215,7 @@ class StockMovementService
                 ]);
 
                 // Invalidate cache for this product
-                $this->invalidateStockCache($product->id);
+                $this->invalidateStockCache($product->id, null);
             });
 
             Log::info('Stock adjustment recorded successfully', [
@@ -236,14 +253,36 @@ class StockMovementService
     }
 
     /**
-     * Invalidate stock cache for a product.
+     * Get current stock quantity for a product variant from sum of all stock movements.
+     * Cached for 1 hour to improve performance.
+     *
+     * @param ProductVariant $variant
+     * @return int
+     */
+    public function getCurrentStockForVariant(ProductVariant $variant): int
+    {
+        $cacheKey = "product_variant_stock_{$variant->id}";
+        
+        return Cache::remember($cacheKey, 3600, function () use ($variant) {
+            return (int) StockMovement::where('product_variant_id', $variant->id)
+                ->sum('quantity');
+        });
+    }
+
+    /**
+     * Invalidate stock cache for a product and optionally its variant.
      *
      * @param int $productId
+     * @param int|null $variantId
      * @return void
      */
-    private function invalidateStockCache(int $productId): void
+    private function invalidateStockCache(int $productId, ?int $variantId = null): void
     {
         Cache::forget("product_stock_{$productId}");
+        
+        if ($variantId) {
+            Cache::forget("product_variant_stock_{$variantId}");
+        }
         
         // Also invalidate dashboard statistics cache
         Cache::forget('dashboard_total_stock_value');
@@ -254,7 +293,7 @@ class StockMovementService
     /**
      * Check stock availability for multiple items (e.g., for sales order validation).
      *
-     * @param array $items Array of items with product_id and quantity
+     * @param array $items Array of items with product_id, quantity, and optional product_variant_id
      * @return array Array of unavailable items with details
      */
     public function checkAvailability(array $items): array
@@ -269,6 +308,7 @@ class StockMovementService
             if (!$product) {
                 $unavailable[] = [
                     'product_id' => $item['product_id'],
+                    'product_variant_id' => $item['product_variant_id'] ?? null,
                     'error' => 'Product not found',
                     'required' => $item['quantity'],
                     'available' => 0,
@@ -276,13 +316,38 @@ class StockMovementService
                 continue;
             }
 
-            $currentStock = $this->getCurrentStock($product);
+            $variantId = $item['product_variant_id'] ?? null;
+            
+            // Get stock for variant if specified, otherwise for product
+            if ($variantId) {
+                $variant = ProductVariant::find($variantId);
+                
+                if (!$variant) {
+                    $unavailable[] = [
+                        'product_id' => $item['product_id'],
+                        'product_variant_id' => $variantId,
+                        'error' => 'Product variant not found',
+                        'required' => $item['quantity'],
+                        'available' => 0,
+                    ];
+                    continue;
+                }
+                
+                $currentStock = $this->getCurrentStockForVariant($variant);
+                $itemName = $product->name . ' - ' . $variant->name;
+                $itemSku = $variant->sku;
+            } else {
+                $currentStock = $this->getCurrentStock($product);
+                $itemName = $product->name;
+                $itemSku = $product->sku;
+            }
 
             if ($currentStock < $item['quantity']) {
                 $unavailable[] = [
                     'product_id' => $item['product_id'],
-                    'product_name' => $product->name,
-                    'product_sku' => $product->sku,
+                    'product_variant_id' => $variantId,
+                    'product_name' => $itemName,
+                    'product_sku' => $itemSku,
                     'required' => $item['quantity'],
                     'available' => $currentStock,
                     'shortage' => $item['quantity'] - $currentStock,
