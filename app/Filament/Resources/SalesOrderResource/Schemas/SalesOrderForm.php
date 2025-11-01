@@ -23,7 +23,7 @@ class SalesOrderForm
                         ->placeholder('Auto-generated')
                         ->helperText('Sales order number will be generated automatically')
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Select::make('customer_id')
                         ->label('Customer')
                         ->relationship('customer', 'name')
@@ -52,14 +52,14 @@ class SalesOrderForm
                                 ->required(),
                         ])
                         ->columnSpan(1),
-                    
+
                     Forms\Components\DatePicker::make('order_date')
                         ->label('Order Date')
                         ->required()
                         ->default(now())
                         ->native(false)
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Select::make('sales_user_id')
                         ->label('Sales Person')
                         ->relationship('salesUser', 'name')
@@ -67,7 +67,7 @@ class SalesOrderForm
                         ->preload()
                         ->default(auth()->id())
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Select::make('status')
                         ->label('Status')
                         ->options([
@@ -81,7 +81,7 @@ class SalesOrderForm
                         ->required()
                         ->disabled(fn ($record) => $record && $record->status !== SalesOrderStatus::DRAFT)
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Textarea::make('notes')
                         ->label('Notes')
                         ->rows(3)
@@ -96,7 +96,7 @@ class SalesOrderForm
                         ->schema([
                             Forms\Components\Select::make('product_id')
                                 ->label('Product')
-                                ->options(Product::query()->pluck('name', 'id'))
+                                ->options(fn () => Product::query()->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
                                 ->reactive()
@@ -105,7 +105,7 @@ class SalesOrderForm
                                         $product = Product::find($state);
                                         if ($product) {
                                             $set('unit_price', $product->selling_price);
-                                            
+
                                             // Get current stock
                                             $stockService = app(StockMovementService::class);
                                             $currentStock = $stockService->getCurrentStock($product);
@@ -114,39 +114,50 @@ class SalesOrderForm
                                     }
                                 })
                                 ->disableOptionWhen(function ($value, $state, callable $get) {
-                                    // Disable already selected products
+                                    // Disable products selected in other repeater rows (allow the current row's selection)
                                     $items = $get('../../items') ?? [];
-                                    return collect($items)
+
+                                    $selected = collect($items)
                                         ->pluck('product_id')
                                         ->filter()
-                                        ->contains($value);
+                                        ->values();
+
+                                    // Exclude the current field's selected value to avoid self-disabling
+                                    if ($state !== null) {
+                                        $index = $selected->search($state, true);
+                                        if ($index !== false) {
+                                            $selected->forget($index);
+                                        }
+                                    }
+
+                                    return $selected->containsStrict($value);
                                 })
                                 ->columnSpan(2),
-                            
+
                             Forms\Components\Placeholder::make('available_stock')
                                 ->label('Available Stock')
                                 ->content(function (callable $get): string {
                                     $productId = $get('product_id');
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return '-';
                                     }
-                                    
+
                                     $product = Product::find($productId);
-                                    if (!$product) {
+                                    if (! $product) {
                                         return '-';
                                     }
-                                    
+
                                     $stockService = app(StockMovementService::class);
                                     $currentStock = $stockService->getCurrentStock($product);
                                     $quantity = $get('quantity') ?? 0;
-                                    
+
                                     $color = $currentStock >= $quantity ? 'success' : 'danger';
                                     $status = $currentStock >= $quantity ? '✓' : '✗';
-                                    
+
                                     return "{$status} {$currentStock} units";
                                 })
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\TextInput::make('quantity')
                                 ->label('Quantity')
                                 ->required()
@@ -159,7 +170,7 @@ class SalesOrderForm
                                     $set('subtotal', $state * $unitPrice);
                                 })
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\TextInput::make('unit_price')
                                 ->label('Unit Price')
                                 ->required()
@@ -172,14 +183,15 @@ class SalesOrderForm
                                     $set('subtotal', $quantity * $state);
                                 })
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\Placeholder::make('subtotal')
                                 ->label('Subtotal')
                                 ->content(function (callable $get): string {
                                     $quantity = $get('quantity') ?? 0;
                                     $unitPrice = $get('unit_price') ?? 0;
                                     $subtotal = $quantity * $unitPrice;
-                                    return 'Rp ' . number_format($subtotal, 0, ',', '.');
+
+                                    return 'Rp '.number_format($subtotal, 0, ',', '.');
                                 })
                                 ->columnSpan(1),
                         ])
@@ -187,14 +199,13 @@ class SalesOrderForm
                         ->defaultItems(1)
                         ->addActionLabel('Add Product')
                         ->collapsible()
-                        ->itemLabel(fn (array $state): ?string => 
-                            isset($state['product_id']) 
-                                ? Product::find($state['product_id'])?->name 
+                        ->itemLabel(fn (array $state): ?string => isset($state['product_id'])
+                                ? Product::find($state['product_id'])?->name
                                 : null
                         )
                         ->reorderable(false)
                         ->columnSpanFull(),
-                    
+
                     Forms\Components\Placeholder::make('total_amount_display')
                         ->label('Total Amount')
                         ->content(function (callable $get): string {
@@ -202,7 +213,8 @@ class SalesOrderForm
                             $total = collect($items)->sum(function ($item) {
                                 return ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0);
                             });
-                            return 'Rp ' . number_format($total, 0, ',', '.');
+
+                            return 'Rp '.number_format($total, 0, ',', '.');
                         })
                         ->columnSpanFull(),
                 ])

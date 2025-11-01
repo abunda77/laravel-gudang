@@ -4,9 +4,12 @@ namespace App\Filament\Resources\InboundOperationResource\Schemas;
 
 use App\Enums\PurchaseOrderStatus;
 use App\Models\InboundOperation;
-use App\Services\StockMovementService;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,31 +27,30 @@ class InboundOperationTable
                     ->sortable()
                     ->copyable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('purchaseOrder.po_number')
                     ->label('PO Number')
                     ->searchable()
                     ->sortable()
-                    ->url(fn (InboundOperation $record): string => 
-                        route('filament.admin.resources.purchase-orders.edit', ['record' => $record->purchase_order_id])
+                    ->url(fn (InboundOperation $record): string => route('filament.admin.resources.purchase-orders.edit', ['record' => $record->purchase_order_id])
                     )
                     ->color('info'),
-                
+
                 Tables\Columns\TextColumn::make('purchaseOrder.supplier.name')
                     ->label('Supplier')
                     ->searchable()
                     ->wrap()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('received_date')
                     ->label('Received Date')
                     ->dateTime()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('receiver.name')
                     ->label('Received By')
                     ->toggleable(),
-                
+
                 Tables\Columns\IconColumn::make('is_confirmed')
                     ->label('Confirmed')
                     ->boolean()
@@ -59,7 +61,7 @@ class InboundOperationTable
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
@@ -72,7 +74,7 @@ class InboundOperationTable
                     ->label('Purchase Order')
                     ->preload()
                     ->searchable(),
-                
+
                 Tables\Filters\Filter::make('received_date')
                     ->form([
                         Forms\Components\DatePicker::make('received_from')
@@ -91,30 +93,29 @@ class InboundOperationTable
                                 fn (Builder $query, $date): Builder => $query->whereDate('received_date', '<=', $date),
                             );
                     }),
-                
+
                 Tables\Filters\Filter::make('confirmed')
                     ->label('Confirmed Only')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->has('stockMovements')
+                    ->query(fn (Builder $query): Builder => $query->has('stockMovements')
                     )
                     ->toggle(),
-                
+
                 Tables\Filters\Filter::make('pending')
                     ->label('Pending Confirmation')
-                    ->query(fn (Builder $query): Builder =>
-                        $query->doesntHave('stockMovements')
+                    ->query(fn (Builder $query): Builder => $query->doesntHave('stockMovements')
                     )
                     ->toggle(),
             ])
-            // ->actions([
-            //     Tables\Actions\EditAction::make(),
-            //     Tables\Actions\DeleteAction::make(),
-            // ])
-            // ->bulkActions([
-            //     Tables\Actions\BulkActionGroup::make([
-            //         Tables\Actions\DeleteBulkAction::make(),
-            //     ]),
-            // ])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->defaultSort('created_at', 'desc');
     }
 
@@ -123,21 +124,21 @@ class InboundOperationTable
      */
     protected static function updatePurchaseOrderStatus($purchaseOrder): void
     {
-        if (!$purchaseOrder) {
+        if (! $purchaseOrder) {
             return;
         }
 
         $purchaseOrder->load('items', 'inboundOperations.items');
-        
+
         $totalOrdered = $purchaseOrder->items->sum('ordered_quantity');
         $totalReceived = 0;
-        
+
         foreach ($purchaseOrder->inboundOperations as $inbound) {
             if ($inbound->stockMovements()->exists()) {
                 $totalReceived += $inbound->items->sum('received_quantity');
             }
         }
-        
+
         if ($totalReceived >= $totalOrdered) {
             $purchaseOrder->update(['status' => PurchaseOrderStatus::COMPLETED]);
         } elseif ($totalReceived > 0) {

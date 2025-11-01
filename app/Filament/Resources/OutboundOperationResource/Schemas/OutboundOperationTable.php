@@ -2,15 +2,16 @@
 
 namespace App\Filament\Resources\OutboundOperationResource\Schemas;
 
-use App\Enums\SalesOrderStatus;
 use App\Models\OutboundOperation;
-use App\Services\StockMovementService;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 class OutboundOperationTable
 {
@@ -25,27 +26,27 @@ class OutboundOperationTable
                     ->sortable()
                     ->copyable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('salesOrder.so_number')
                     ->label('SO Number')
                     ->searchable()
                     ->sortable()
                     ->copyable(),
-                
+
                 Tables\Columns\TextColumn::make('salesOrder.customer.name')
                     ->label('Customer')
                     ->searchable()
                     ->wrap(),
-                
+
                 Tables\Columns\TextColumn::make('shipped_date')
                     ->label('Shipped Date')
                     ->dateTime()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('preparer.name')
                     ->label('Prepared By')
                     ->toggleable(),
-                
+
                 Tables\Columns\IconColumn::make('stock_recorded')
                     ->label('Stock Recorded')
                     ->boolean()
@@ -56,7 +57,7 @@ class OutboundOperationTable
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
@@ -69,7 +70,7 @@ class OutboundOperationTable
                     ->label('Sales Order')
                     ->preload()
                     ->multiple(),
-                
+
                 Tables\Filters\Filter::make('shipped_date')
                     ->form([
                         Forms\Components\DatePicker::make('shipped_from')
@@ -88,24 +89,25 @@ class OutboundOperationTable
                                 fn (Builder $query, $date): Builder => $query->whereDate('shipped_date', '<=', $date),
                             );
                     }),
-                
+
                 Tables\Filters\Filter::make('stock_recorded')
                     ->label('Stock Recorded')
                     ->query(fn (Builder $query): Builder => $query->has('stockMovements')),
-                
+
                 Tables\Filters\Filter::make('stock_not_recorded')
                     ->label('Stock Not Recorded')
                     ->query(fn (Builder $query): Builder => $query->doesntHave('stockMovements')),
             ])
-            // ->actions([
-            //     Tables\Actions\EditAction::make(),
-            //     Tables\Actions\DeleteAction::make(),
-            // ])
-            // ->bulkActions([
-            //     Tables\Actions\BulkActionGroup::make([
-            //         Tables\Actions\DeleteBulkAction::make(),
-            //     ]),
-            // ])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->defaultSort('created_at', 'desc');
     }
 }

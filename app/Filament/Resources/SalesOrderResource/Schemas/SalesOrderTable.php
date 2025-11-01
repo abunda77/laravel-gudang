@@ -3,10 +3,12 @@
 namespace App\Filament\Resources\SalesOrderResource\Schemas;
 
 use App\Enums\SalesOrderStatus;
-use App\Models\SalesOrder;
-use App\Services\StockMovementService;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,18 +26,18 @@ class SalesOrderTable
                     ->sortable()
                     ->copyable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
                     ->searchable()
                     ->sortable()
                     ->wrap(),
-                
+
                 Tables\Columns\TextColumn::make('order_date')
                     ->label('Order Date')
                     ->date()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -54,7 +56,7 @@ class SalesOrderTable
                         SalesOrderStatus::CANCELLED => 'Cancelled',
                     })
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('total_amount')
                     ->label('Total Amount')
                     ->money('IDR')
@@ -64,11 +66,11 @@ class SalesOrderTable
                             ->money('IDR')
                             ->label('Total'),
                     ]),
-                
+
                 Tables\Columns\TextColumn::make('salesUser.name')
                     ->label('Sales Person')
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
@@ -86,13 +88,13 @@ class SalesOrderTable
                         SalesOrderStatus::CANCELLED->value => 'Cancelled',
                     ])
                     ->multiple(),
-                
+
                 Tables\Filters\SelectFilter::make('customer')
                     ->relationship('customer', 'name')
                     ->label('Customer')
                     ->preload()
                     ->multiple(),
-                
+
                 Tables\Filters\Filter::make('order_date')
                     ->form([
                         Forms\Components\DatePicker::make('order_from')
@@ -112,15 +114,16 @@ class SalesOrderTable
                             );
                     }),
             ])
-            // ->actions([
-            //     Tables\Actions\EditAction::make(),
-            //     Tables\Actions\DeleteAction::make(),
-            // ])
-            // ->bulkActions([
-            //     Tables\Actions\BulkActionGroup::make([
-            //         Tables\Actions\DeleteBulkAction::make(),
-            //     ]),
-            // ])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->defaultSort('created_at', 'desc');
     }
 }
