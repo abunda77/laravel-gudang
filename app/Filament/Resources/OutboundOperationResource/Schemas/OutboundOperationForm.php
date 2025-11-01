@@ -4,6 +4,7 @@ namespace App\Filament\Resources\OutboundOperationResource\Schemas;
 
 use App\Enums\SalesOrderStatus;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\SalesOrder;
 use App\Services\StockMovementService;
 use Filament\Forms;
@@ -41,15 +42,22 @@ class OutboundOperationForm
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             if ($state) {
-                                $salesOrder = SalesOrder::with('items.product')->find($state);
+                                $salesOrder = SalesOrder::with('items.product.variants', 'items.productVariant')->find($state);
                                 if ($salesOrder) {
                                     // Auto-load items from sales order
                                     $items = $salesOrder->items->map(function ($item) {
                                         $stockService = app(StockMovementService::class);
-                                        $currentStock = $stockService->getCurrentStock($item->product);
+                                        
+                                        // Get stock for variant or product
+                                        if ($item->product_variant_id) {
+                                            $currentStock = $stockService->getCurrentStockForVariant($item->productVariant);
+                                        } else {
+                                            $currentStock = $stockService->getCurrentStock($item->product);
+                                        }
                                         
                                         return [
                                             'product_id' => $item->product_id,
+                                            'product_variant_id' => $item->product_variant_id,
                                             'ordered_quantity' => $item->quantity,
                                             'shipped_quantity' => $item->quantity,
                                             'available_stock' => $currentStock,
@@ -103,7 +111,23 @@ class OutboundOperationForm
                                 ->required()
                                 ->disabled()
                                 ->dehydrated()
-                                ->columnSpan(2),
+                                ->columnSpan(1),
+                            
+                            Forms\Components\Select::make('product_variant_id')
+                                ->label('Variant')
+                                ->options(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return [];
+                                    }
+                                    return ProductVariant::where('product_id', $productId)
+                                        ->pluck('name', 'id');
+                                })
+                                ->searchable()
+                                ->disabled()
+                                ->dehydrated()
+                                ->visible(fn (callable $get) => $get('product_variant_id') !== null)
+                                ->columnSpan(1),
                             
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Ordered Qty')
@@ -116,18 +140,29 @@ class OutboundOperationForm
                                 ->label('Available Stock')
                                 ->content(function (callable $get): string {
                                     $productId = $get('product_id');
+                                    $variantId = $get('product_variant_id');
+                                    
                                     if (!$productId) {
                                         return '-';
                                     }
                                     
-                                    $product = Product::find($productId);
-                                    if (!$product) {
-                                        return '-';
-                                    }
-                                    
                                     $stockService = app(StockMovementService::class);
-                                    $currentStock = $stockService->getCurrentStock($product);
                                     $shippedQty = $get('shipped_quantity') ?? 0;
+                                    
+                                    // Get stock for variant or product
+                                    if ($variantId) {
+                                        $variant = ProductVariant::find($variantId);
+                                        if (!$variant) {
+                                            return '-';
+                                        }
+                                        $currentStock = $stockService->getCurrentStockForVariant($variant);
+                                    } else {
+                                        $product = Product::find($productId);
+                                        if (!$product) {
+                                            return '-';
+                                        }
+                                        $currentStock = $stockService->getCurrentStock($product);
+                                    }
                                     
                                     $status = $currentStock >= $shippedQty ? '✓' : '✗';
                                     
@@ -157,7 +192,17 @@ class OutboundOperationForm
                         ->collapsible()
                         ->itemLabel(fn (array $state): ?string => 
                             isset($state['product_id']) 
-                                ? Product::find($state['product_id'])?->name 
+                                ? (function() use ($state) {
+                                    $product = Product::find($state['product_id']);
+                                    if (!$product) return null;
+                                    
+                                    if (isset($state['product_variant_id']) && $state['product_variant_id']) {
+                                        $variant = ProductVariant::find($state['product_variant_id']);
+                                        return $variant ? $product->name . ' - ' . $variant->name : $product->name;
+                                    }
+                                    
+                                    return $product->name;
+                                })()
                                 : null
                         )
                         ->columnSpanFull(),
