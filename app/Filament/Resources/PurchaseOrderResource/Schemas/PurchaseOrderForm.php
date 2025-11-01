@@ -90,12 +90,12 @@ class PurchaseOrderForm
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     // Reset variant when product changes
                                     $set('product_variant_id', null);
-                                    
+
                                     if ($state) {
                                         $product = Product::with('variants')->find($state);
                                         if ($product) {
                                             $set('unit_price', $product->purchase_price);
-                                            
+
                                             // If product has only one variant, auto-select it
                                             if ($product->variants->count() === 1) {
                                                 $set('product_variant_id', $product->variants->first()->id);
@@ -104,40 +104,42 @@ class PurchaseOrderForm
                                     }
                                 })
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\Select::make('product_variant_id')
                                 ->label('Variant')
                                 ->options(function (callable $get) {
                                     $productId = $get('product_id');
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return [];
                                     }
-                                    
+
                                     $product = Product::with('variants')->find($productId);
-                                    if (!$product || $product->variants->isEmpty()) {
+                                    if (! $product || $product->variants->isEmpty()) {
                                         return [];
                                     }
-                                    
+
                                     return $product->variants->pluck('name', 'id');
                                 })
                                 ->searchable()
                                 ->reactive()
                                 ->visible(function (callable $get) {
                                     $productId = $get('product_id');
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return false;
                                     }
-                                    
+
                                     $product = Product::with('variants')->find($productId);
+
                                     return $product && $product->variants->isNotEmpty();
                                 })
                                 ->required(function (callable $get) {
                                     $productId = $get('product_id');
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return false;
                                     }
-                                    
+
                                     $product = Product::with('variants')->find($productId);
+
                                     return $product && $product->variants->isNotEmpty();
                                 })
                                 ->helperText('Select product variant')
@@ -184,17 +186,19 @@ class PurchaseOrderForm
                         ->defaultItems(1)
                         ->addActionLabel('Add Product')
                         ->collapsible()
-                        ->itemLabel(fn (array $state): ?string => 
-                            isset($state['product_id']) 
-                                ? (function() use ($state) {
+                        ->itemLabel(fn (array $state): ?string => isset($state['product_id'])
+                                ? (function () use ($state) {
                                     $product = Product::find($state['product_id']);
-                                    if (!$product) return null;
-                                    
+                                    if (! $product) {
+                                        return null;
+                                    }
+
                                     if (isset($state['product_variant_id']) && $state['product_variant_id']) {
                                         $variant = ProductVariant::find($state['product_variant_id']);
-                                        return $variant ? $product->name . ' - ' . $variant->name : $product->name;
+
+                                        return $variant ? $product->name.' - '.$variant->name : $product->name;
                                     }
-                                    
+
                                     return $product->name;
                                 })()
                                 : null

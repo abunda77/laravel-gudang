@@ -17,18 +17,10 @@ class EditPurchaseOrder extends EditRecord
         ];
     }
 
-    protected function mutateFormDataBeforeSave(array $data): array
+    protected function afterSave(): void
     {
-        // Calculate total amount from items
-        $totalAmount = 0;
-        if (isset($data['items']) && is_array($data['items'])) {
-            foreach ($data['items'] as $item) {
-                $totalAmount += ($item['ordered_quantity'] ?? 0) * ($item['unit_price'] ?? 0);
-            }
-        }
-        $data['total_amount'] = $totalAmount;
-        
-        return $data;
+        // Update total amount after items are saved
+        $this->record->updateTotalAmount();
     }
 
     protected function getRedirectUrl(): string

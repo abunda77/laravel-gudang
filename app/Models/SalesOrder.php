@@ -217,4 +217,22 @@ class SalesOrder extends Model
         $this->status = SalesOrderStatus::APPROVED;
         $this->save();
     }
+
+    /**
+     * Calculate total amount from items.
+     */
+    public function calculateTotalAmount(): float
+    {
+        return $this->items->sum(function ($item) {
+            return $item->quantity * $item->unit_price;
+        });
+    }
+
+    /**
+     * Update the total amount based on items.
+     */
+    public function updateTotalAmount(): void
+    {
+        $this->update(['total_amount' => $this->calculateTotalAmount()]);
+    }
 }

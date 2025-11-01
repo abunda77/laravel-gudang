@@ -14,16 +14,13 @@ class CreatePurchaseOrder extends CreateRecord
         // Set created_by to current user
         $data['created_by'] = auth()->id();
         
-        // Calculate total amount from items
-        $totalAmount = 0;
-        if (isset($data['items']) && is_array($data['items'])) {
-            foreach ($data['items'] as $item) {
-                $totalAmount += ($item['ordered_quantity'] ?? 0) * ($item['unit_price'] ?? 0);
-            }
-        }
-        $data['total_amount'] = $totalAmount;
-        
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        // Update total amount after items are created
+        $this->record->updateTotalAmount();
     }
 
     protected function getRedirectUrl(): string

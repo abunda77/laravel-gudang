@@ -44,23 +44,16 @@ class PurchaseOrderTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\SelectColumn::make('status')
                     ->label('Status')
-                    ->badge()
-                    ->color(fn (PurchaseOrderStatus $state): string => match ($state) {
-                        PurchaseOrderStatus::DRAFT => 'gray',
-                        PurchaseOrderStatus::SENT => 'info',
-                        PurchaseOrderStatus::PARTIALLY_RECEIVED => 'warning',
-                        PurchaseOrderStatus::COMPLETED => 'success',
-                        PurchaseOrderStatus::CANCELLED => 'danger',
-                    })
-                    ->formatStateUsing(fn (PurchaseOrderStatus $state): string => match ($state) {
-                        PurchaseOrderStatus::DRAFT => 'Draft',
-                        PurchaseOrderStatus::SENT => 'Sent',
-                        PurchaseOrderStatus::PARTIALLY_RECEIVED => 'Partially Received',
-                        PurchaseOrderStatus::COMPLETED => 'Completed',
-                        PurchaseOrderStatus::CANCELLED => 'Cancelled',
-                    })
+                    ->options([
+                        PurchaseOrderStatus::DRAFT->value => 'Draft',
+                        PurchaseOrderStatus::SENT->value => 'Sent',
+                        PurchaseOrderStatus::PARTIALLY_RECEIVED->value => 'Partially Received',
+                        PurchaseOrderStatus::COMPLETED->value => 'Completed',
+                        PurchaseOrderStatus::CANCELLED->value => 'Cancelled',
+                    ])
+                    ->selectablePlaceholder(false)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total_amount')

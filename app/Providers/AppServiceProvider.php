@@ -8,7 +8,9 @@ use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\SalesOrder;
+use App\Models\SalesOrderItem;
 use App\Models\InboundOperation;
 use App\Models\OutboundOperation;
 use App\Models\Invoice;
@@ -20,6 +22,8 @@ use App\Policies\SalesOrderPolicy;
 use App\Policies\InboundOperationPolicy;
 use App\Policies\OutboundOperationPolicy;
 use App\Policies\InvoicePolicy;
+use App\Observers\PurchaseOrderItemObserver;
+use App\Observers\SalesOrderItemObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -56,5 +60,9 @@ class AppServiceProvider extends ServiceProvider
         foreach ($this->policies as $model => $policy) {
             Gate::policy($model, $policy);
         }
+
+        // Register observers
+        PurchaseOrderItem::observe(PurchaseOrderItemObserver::class);
+        SalesOrderItem::observe(SalesOrderItemObserver::class);
     }
 }
