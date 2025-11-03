@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PurchaseOrderResource\Pages;
 
 use App\Filament\Resources\PurchaseOrderResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 
 class CreatePurchaseOrder extends CreateRecord
 {
@@ -12,8 +13,8 @@ class CreatePurchaseOrder extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Set created_by to current user
-        $data['created_by'] = auth()->id();
-        
+        $data['created_by'] = Auth::id();
+
         return $data;
     }
 
