@@ -1,66 +1,170 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Warehouse Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem Manajemen Gudang berbasis web yang dibangun dengan Laravel 12 dan Filament 4.0 untuk mengelola operasi pergudangan, pembelian, penjualan, dan logistik.
 
-## About Laravel
+## Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+-   **Manajemen Inventori**: Kelola produk, kategori, varian, dan stok dengan sistem event sourcing
+-   **Manajemen Pembelian**: Buat dan kelola purchase order dari supplier
+-   **Manajemen Penjualan**: Proses sales order dan transaksi pelanggan
+-   **Operasi Gudang**: Tangani operasi inbound/outbound dengan pencatatan stock movement
+-   **Logistik**: Kelola delivery order dengan penugasan driver dan kendaraan
+-   **Keuangan**: Generate invoice dan tracking pembayaran
+-   **Pelaporan**: Kartu stok, alert stok rendah, laporan penjualan, dan valuasi stok
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Teknologi
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   **Backend**: Laravel 12 (PHP ^8.2)
+-   **Admin Panel**: Filament 4.0
+-   **Database**: MySQL/PostgreSQL (SQLite untuk development)
+-   **Frontend**: Vite 6 + Tailwind CSS 4
+-   **Queue**: Database driver (Redis untuk production)
+-   **PDF Generation**: DomPDF
+-   **Performance**: Laravel Octane (optional)
 
-## Learning Laravel
+## Instalasi
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Requirements
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+-   PHP >= 8.2
+-   Composer
+-   Node.js & NPM
+-   MySQL/PostgreSQL (atau SQLite untuk development)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Setup
 
-## Laravel Sponsors
+1. Clone repository dan install dependencies:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer install
+npm install
+```
 
-### Premium Partners
+2. Setup environment:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+3. Konfigurasi database di `.env`, lalu jalankan migrasi:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan migrate --seed
+```
 
-## Code of Conduct
+4. Buat symlink storage:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan storage:link
+```
 
-## Security Vulnerabilities
+5. Build assets:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+npm run build
+```
+
+## Development
+
+Jalankan development server dengan satu command:
+
+```bash
+composer dev
+```
+
+Atau jalankan secara terpisah:
+
+```bash
+php artisan serve          # Laravel server
+php artisan queue:listen   # Queue worker
+php artisan pail          # Log viewer
+npm run dev               # Vite dev server
+```
+
+### Development dengan Laravel Octane (Optional)
+
+Untuk performa lebih tinggi, gunakan Laravel Octane:
+
+```bash
+# Dengan RoadRunner (memerlukan ext-sockets)
+php artisan octane:start --server=roadrunner
+
+# Dengan Swoole (memerlukan ext-swoole)
+php artisan octane:start --server=swoole
+
+# Dengan FrankenPHP (Linux/macOS/WSL/Docker only)
+php artisan octane:start --server=frankenphp
+```
+
+**Catatan untuk Windows:**
+- RoadRunner memerlukan PHP extension `sockets`
+- Swoole memerlukan PHP extension `swoole` (install via PECL atau Laragon)
+- FrankenPHP tidak support Windows native, gunakan WSL atau Docker
+- Untuk production di Windows, disarankan menggunakan Docker atau WSL
+
+## Testing
+
+```bash
+# Run semua tests
+php artisan test
+
+# Run dengan coverage
+php artisan test --coverage
+
+# Run specific suite
+php artisan test --testsuite=Feature
+```
+
+## Code Quality
+
+```bash
+# Format code dengan Laravel Pint
+./vendor/bin/pint
+
+# Check tanpa fixing
+./vendor/bin/pint --test
+```
+
+## Deployment
+
+Lihat dokumentasi lengkap di:
+
+-   [DEPLOYMENT.md](DEPLOYMENT.md) - Panduan deployment
+-   [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) - Checklist production
+
+Quick deployment:
+
+```bash
+./deploy.sh
+```
+
+## Dokumentasi
+
+-   [CARA_KERJA_VARIANT_INBOUND.md](CARA_KERJA_VARIANT_INBOUND.md) - Cara kerja variant inbound
+-   [PRODUCT_VARIANT_STOCK.md](PRODUCT_VARIANT_STOCK.md) - Manajemen stok variant
+-   [PURCHASE_ORDER_VARIANT_SUPPORT.md](PURCHASE_ORDER_VARIANT_SUPPORT.md) - Support variant di PO
+-   [INBOUND_OPERATION_VARIANT_SUPPORT.md](INBOUND_OPERATION_VARIANT_SUPPORT.md) - Support variant di inbound
+-   [QUEUE_IMPLEMENTATION.md](QUEUE_IMPLEMENTATION.md) - Implementasi queue system
+-   [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) - Optimasi performa
+
+## Aturan Bisnis Penting
+
+1. **Semua perubahan stok harus melalui StockMovementService**
+2. **Gunakan database transactions untuk operasi multi-step**
+3. **Stock quantity dihitung dari sum of movements (event sourcing)**
+4. **Audit trail lengkap untuk semua transaksi**
+5. **Role-based access control untuk semua resource**
+
+## Struktur Nomor Dokumen
+
+-   Purchase Order: `PO-YYYYMMDD-####`
+-   Sales Order: `SO-YYYYMMDD-####`
+-   Inbound: `IN-YYYYMMDD-####`
+-   Outbound: `OUT-YYYYMMDD-####`
+-   Delivery Order: `DO-YYYYMMDD-####`
+-   Invoice: `INV-YYYYMMDD-####`
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Proprietary - All rights reserved.

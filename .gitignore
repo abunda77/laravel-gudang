@@ -131,3 +131,9 @@ Thumbs.db
 temp-laravel/
 storage/
 .env.production
+
+**/caddy
+frankenphp
+frankenphp-worker.php
+rr
+.rr.yaml
