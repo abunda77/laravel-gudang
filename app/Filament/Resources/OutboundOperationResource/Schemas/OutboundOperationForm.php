@@ -10,6 +10,7 @@ use App\Services\StockMovementService;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class OutboundOperationForm
 {
@@ -25,7 +26,7 @@ class OutboundOperationForm
                         ->placeholder('Auto-generated')
                         ->helperText('Outbound operation number will be generated automatically')
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Select::make('sales_order_id')
                         ->label('Sales Order')
                         ->options(function () {
@@ -47,14 +48,14 @@ class OutboundOperationForm
                                     // Auto-load items from sales order
                                     $items = $salesOrder->items->map(function ($item) {
                                         $stockService = app(StockMovementService::class);
-                                        
+
                                         // Get stock for variant or product
                                         if ($item->product_variant_id) {
                                             $currentStock = $stockService->getCurrentStockForVariant($item->productVariant);
                                         } else {
                                             $currentStock = $stockService->getCurrentStock($item->product);
                                         }
-                                        
+
                                         return [
                                             'product_id' => $item->product_id,
                                             'product_variant_id' => $item->product_variant_id,
@@ -64,7 +65,7 @@ class OutboundOperationForm
                                             'confirmed' => true,
                                         ];
                                     })->toArray();
-                                    
+
                                     $set('items', $items);
                                 }
                             }
@@ -75,23 +76,23 @@ class OutboundOperationForm
                             return $salesOrder && $salesOrder->status === SalesOrderStatus::COMPLETED;
                         })
                         ->columnSpan(1),
-                    
+
                     Forms\Components\DateTimePicker::make('shipped_date')
                         ->label('Shipped Date')
                         ->required()
                         ->default(now())
                         ->native(false)
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Select::make('prepared_by')
                         ->label('Prepared By')
                         ->relationship('preparer', 'name')
                         ->searchable()
                         ->preload()
-                        ->default(auth()->id())
+                        ->default(Auth::id())
                         ->required()
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Textarea::make('notes')
                         ->label('Notes')
                         ->rows(3)
@@ -112,7 +113,7 @@ class OutboundOperationForm
                                 ->disabled()
                                 ->dehydrated()
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\Select::make('product_variant_id')
                                 ->label('Variant')
                                 ->options(function (callable $get) {
@@ -126,50 +127,54 @@ class OutboundOperationForm
                                 ->searchable()
                                 ->disabled()
                                 ->dehydrated()
-                                ->visible(fn (callable $get) => $get('product_variant_id') !== null)
+                                ->visible(fn(callable $get) => $get('product_variant_id') !== null)
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Ordered Qty')
                                 ->numeric()
-                                ->disabled()
+                                ->disabled(false)
                                 ->dehydrated(false)
                                 ->columnSpan(1),
-                            
-                            Forms\Components\Placeholder::make('available_stock')
+
+                            Forms\Components\ViewField::make('available_stock')
                                 ->label('Available Stock')
-                                ->content(function (callable $get): string {
+                                ->view('filament.forms.components.stock-display')
+                                ->viewData(function (callable $get): array {
                                     $productId = $get('product_id');
                                     $variantId = $get('product_variant_id');
-                                    
+
                                     if (!$productId) {
-                                        return '-';
+                                        return ['display' => '-'];
                                     }
-                                    
+
                                     $stockService = app(StockMovementService::class);
                                     $shippedQty = $get('shipped_quantity') ?? 0;
-                                    
+
                                     // Get stock for variant or product
                                     if ($variantId) {
                                         $variant = ProductVariant::find($variantId);
                                         if (!$variant) {
-                                            return '-';
+                                            return ['display' => '-'];
                                         }
                                         $currentStock = $stockService->getCurrentStockForVariant($variant);
                                     } else {
                                         $product = Product::find($productId);
                                         if (!$product) {
-                                            return '-';
+                                            return ['display' => '-'];
                                         }
                                         $currentStock = $stockService->getCurrentStock($product);
                                     }
-                                    
+
                                     $status = $currentStock >= $shippedQty ? '✓' : '✗';
-                                    
-                                    return "{$status} {$currentStock} units";
+
+                                    return [
+                                        'display' => "{$status} {$currentStock} units",
+                                        'sufficient' => $currentStock >= $shippedQty,
+                                    ];
                                 })
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\TextInput::make('shipped_quantity')
                                 ->label('Shipped Qty')
                                 ->required()
@@ -178,7 +183,7 @@ class OutboundOperationForm
                                 ->default(1)
                                 ->reactive()
                                 ->columnSpan(1),
-                            
+
                             Forms\Components\Checkbox::make('confirmed')
                                 ->label('Confirmed')
                                 ->default(true)
@@ -190,17 +195,18 @@ class OutboundOperationForm
                         ->deletable(false)
                         ->reorderable(false)
                         ->collapsible()
-                        ->itemLabel(fn (array $state): ?string => 
-                            isset($state['product_id']) 
-                                ? (function() use ($state) {
+                        ->itemLabel(
+                            fn(array $state): ?string =>
+                            isset($state['product_id'])
+                                ? (function () use ($state) {
                                     $product = Product::find($state['product_id']);
                                     if (!$product) return null;
-                                    
+
                                     if (isset($state['product_variant_id']) && $state['product_variant_id']) {
                                         $variant = ProductVariant::find($state['product_variant_id']);
                                         return $variant ? $product->name . ' - ' . $variant->name : $product->name;
                                     }
-                                    
+
                                     return $product->name;
                                 })()
                                 : null

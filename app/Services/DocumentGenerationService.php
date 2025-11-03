@@ -58,9 +58,10 @@ class DocumentGenerationService
     public function generateInvoice(Invoice $invoice): string
     {
         try {
-            $pdf = Pdf::loadView('documents.invoice', [
+            $pdf = Pdf::loadView('invoices.pdf', [
                 'invoice' => $invoice->load([
                     'salesOrder.items.product',
+                    'salesOrder.items.productVariant',
                     'salesOrder.customer'
                 ])
             ]);

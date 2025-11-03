@@ -5,12 +5,19 @@ namespace App\Filament\Resources\InvoiceResource\Schemas;
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Services\DocumentGenerationService;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceTable
 {
@@ -52,13 +59,15 @@ class InvoiceTable
                             : 'gray'
                     ),
                 
-                Tables\Columns\TextColumn::make('payment_status')
+                Tables\Columns\SelectColumn::make('payment_status')
                     ->label('Payment Status')
-                    ->badge()
-                    ->color(fn (InvoiceStatus $state): string => match ($state) {
-                        InvoiceStatus::PAID => 'success',
-                        InvoiceStatus::UNPAID => 'warning',
-                    }),
+                    ->options([
+                        InvoiceStatus::PAID->value => 'Paid',
+                        InvoiceStatus::UNPAID->value => 'Unpaid',
+                        InvoiceStatus::OVERDUE->value => 'Overdue',
+                    ])
+                    ->selectablePlaceholder(false)
+                    ->sortable(),
                 
                 Tables\Columns\TextColumn::make('total_amount')
                     ->label('Total Amount')
@@ -74,7 +83,11 @@ class InvoiceTable
             ->filters([
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('Payment Status')
-                    ->options(InvoiceStatus::class)
+                    ->options([
+                        InvoiceStatus::PAID->value => 'Paid',
+                        InvoiceStatus::UNPAID->value => 'Unpaid',
+                        InvoiceStatus::OVERDUE->value => 'Overdue',
+                    ])
                     ->native(false),
                 
                 Tables\Filters\SelectFilter::make('customer')
@@ -109,15 +122,39 @@ class InvoiceTable
                             ->where('due_date', '<', now())
                     ),
             ])
-            // ->actions([
-            //     Tables\Actions\EditAction::make(),
-            //     Tables\Actions\DeleteAction::make(),
-            // ])
-            // ->bulkActions([
-            //     Tables\Actions\BulkActionGroup::make([
-            //         Tables\Actions\DeleteBulkAction::make(),
-            //     ]),
-            // ])
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
+                Action::make('printInvoice')
+                    ->label('Print Invoice')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->action(function (Invoice $record) {
+                        try {
+                            $invoice = $record->load(['salesOrder.customer', 'salesOrder.items.product']);
+
+                            $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, "invoice-{$record->invoice_number}.pdf");
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error generating PDF')
+                                ->body('Failed to generate invoice PDF: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                    }),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ])
             ->defaultSort('created_at', 'desc');
     }
 }

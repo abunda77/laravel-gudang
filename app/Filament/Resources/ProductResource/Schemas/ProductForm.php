@@ -45,7 +45,7 @@ class ProductForm
                         ])
                         ->columnSpan(1),
                 ])
-                ->columns(2),
+                ->columns(1),
 
             Section::make('Pricing & Stock')
                 ->schema([

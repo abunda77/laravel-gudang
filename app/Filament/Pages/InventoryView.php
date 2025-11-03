@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Product;
 use App\Services\StockMovementService;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -62,20 +63,20 @@ class InventoryView extends Page implements HasTable
                     ->sortable()
                     ->copyable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Product Name')
                     ->searchable()
                     ->sortable()
                     ->wrap()
-                    ->description(fn (Product $record): ?string => $record->description),
-                
+                    ->description(fn(Product $record): ?string => $record->description),
+
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category')
                     ->sortable()
                     ->badge()
                     ->color('info'),
-                
+
                 Tables\Columns\TextColumn::make('current_stock')
                     ->label('Current Stock')
                     ->getStateUsing(function (Product $record): int {
@@ -91,26 +92,26 @@ class InventoryView extends Page implements HasTable
                         }
                         return 'success';
                     })
-                    ->suffix(fn (Product $record): string => ' ' . $record->unit)
+                    ->suffix(fn(Product $record): string => ' ' . $record->unit)
                     ->sortable(query: function (Builder $query, string $direction): Builder {
                         return $query
                             ->leftJoin('stock_movements', 'products.id', '=', 'stock_movements.product_id')
                             ->groupBy('products.id')
                             ->orderByRaw("SUM(COALESCE(stock_movements.quantity, 0)) {$direction}");
                     }),
-                
+
                 Tables\Columns\TextColumn::make('minimum_stock')
                     ->label('Min. Stock')
                     ->badge()
                     ->color('gray')
-                    ->suffix(fn (Product $record): string => ' ' . $record->unit),
-                
+                    ->suffix(fn(Product $record): string => ' ' . $record->unit),
+
                 Tables\Columns\TextColumn::make('rack_location')
                     ->label('Location')
                     ->placeholder('Not set')
                     ->icon('heroicon-o-map-pin')
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('stock_value')
                     ->label('Stock Value')
                     ->getStateUsing(function (Product $record): float {
@@ -128,10 +129,11 @@ class InventoryView extends Page implements HasTable
                     ->preload()
                     ->multiple()
                     ->searchable(),
-                
+
                 Tables\Filters\Filter::make('low_stock')
                     ->label('Low Stock (Below Minimum)')
-                    ->query(fn (Builder $query): Builder =>
+                    ->query(
+                        fn(Builder $query): Builder =>
                         $query->whereRaw('(
                             SELECT COALESCE(SUM(quantity), 0)
                             FROM stock_movements
@@ -139,10 +141,11 @@ class InventoryView extends Page implements HasTable
                         ) < products.minimum_stock')
                     )
                     ->toggle(),
-                
+
                 Tables\Filters\Filter::make('out_of_stock')
                     ->label('Out of Stock')
-                    ->query(fn (Builder $query): Builder =>
+                    ->query(
+                        fn(Builder $query): Builder =>
                         $query->whereRaw('(
                             SELECT COALESCE(SUM(quantity), 0)
                             FROM stock_movements
@@ -151,15 +154,13 @@ class InventoryView extends Page implements HasTable
                     )
                     ->toggle(),
             ])
-            // ->actions([
-            //     Tables\Actions\Action::make('view_stock_card')
-            //         ->label('Stock Card')
-            //         ->icon('heroicon-o-document-text')
-            //         ->url(fn (Product $record): string => 
-            //             route('filament.admin.pages.stock-card-report', ['product' => $record->id])
-            //         )
-            //         ->openUrlInNewTab(),
-            // ])
+            ->recordActions([
+                Action::make('view_stock_card')
+                    ->label('Stock Card')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn(Product $record): string => StockCardReport::getUrl(['product' => $record->id]))
+                    ->openUrlInNewTab(),
+            ])
             ->defaultSort('name', 'asc')
             ->poll('30s')
             ->striped();

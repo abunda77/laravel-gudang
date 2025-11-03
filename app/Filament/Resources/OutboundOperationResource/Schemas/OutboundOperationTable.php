@@ -9,6 +9,12 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -99,7 +105,99 @@ class OutboundOperationTable
                     ->query(fn (Builder $query): Builder => $query->doesntHave('stockMovements')),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->infolist([
+                        Section::make('Outbound Operation Information')
+                            ->schema([
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('outbound_number')
+                                            ->label('Outbound Number')
+                                            ->weight(FontWeight::Bold)
+                                            ->copyable(),
+
+                                        TextEntry::make('salesOrder.so_number')
+                                            ->label('SO Number')
+                                            ->weight(FontWeight::SemiBold)
+                                            ->url(fn ($record) => route('filament.admin.resources.sales-orders.edit', ['record' => $record->sales_order_id]))
+                                            ->color('info'),
+
+                                        IconEntry::make('stock_recorded')
+                                            ->label('Stock Recorded')
+                                            ->boolean()
+                                            ->state(fn ($record) => $record->stockMovements()->exists())
+                                            ->trueIcon('heroicon-o-check-circle')
+                                            ->falseIcon('heroicon-o-x-circle')
+                                            ->trueColor('success')
+                                            ->falseColor('danger'),
+                                    ]),
+
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('salesOrder.customer.name')
+                                            ->label('Customer'),
+
+                                        TextEntry::make('shipped_date')
+                                            ->label('Shipped Date')
+                                            ->dateTime('d M Y, H:i'),
+
+                                        TextEntry::make('preparer.name')
+                                            ->label('Prepared By'),
+                                    ]),
+
+                                TextEntry::make('notes')
+                                    ->label('Notes')
+                                    ->placeholder('No notes')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Section::make('Shipped Items')
+                            ->schema([
+                                RepeatableEntry::make('items')
+                                    ->label('')
+                                    ->schema([
+                                        TextEntry::make('product.name')
+                                            ->label('Product')
+                                            ->weight(FontWeight::SemiBold),
+
+                                        TextEntry::make('productVariant.name')
+                                            ->label('Variant')
+                                            ->placeholder('No variant')
+                                            ->color('gray'),
+
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextEntry::make('shipped_quantity')
+                                                    ->label('Shipped Quantity')
+                                                    ->suffix(' units'),
+
+                                                TextEntry::make('salesOrderItem.quantity')
+                                                    ->label('Ordered Quantity')
+                                                    ->suffix(' units')
+                                                    ->color('gray'),
+                                            ]),
+                                    ])
+                                    ->contained(false),
+                            ])
+                            ->collapsible(),
+
+                        Section::make('Additional Information')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        TextEntry::make('created_at')
+                                            ->label('Created At')
+                                            ->dateTime('d M Y, H:i'),
+
+                                        TextEntry::make('updated_at')
+                                            ->label('Last Updated')
+                                            ->dateTime('d M Y, H:i'),
+                                    ]),
+                            ])
+                            ->collapsed()
+                            ->collapsible(),
+                    ])
+                    ->modalWidth('5xl'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

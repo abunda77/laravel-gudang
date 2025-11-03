@@ -74,7 +74,7 @@ class PurchaseOrderForm
                         ->rows(3)
                         ->columnSpanFull(),
                 ])
-                ->columns(2),
+                ->columns(1),
 
             Section::make('Order Items')
                 ->schema([
@@ -103,7 +103,7 @@ class PurchaseOrderForm
                                         }
                                     }
                                 })
-                                ->columnSpan(1),
+                                ->columnSpan(3),
 
                             Forms\Components\Select::make('product_variant_id')
                                 ->label('Variant')
@@ -143,7 +143,7 @@ class PurchaseOrderForm
                                     return $product && $product->variants->isNotEmpty();
                                 })
                                 ->helperText('Select product variant')
-                                ->columnSpan(1),
+                                ->columnSpan(21),
 
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Quantity')
@@ -156,7 +156,7 @@ class PurchaseOrderForm
                                     $unitPrice = $get('unit_price') ?? 0;
                                     $set('subtotal', $state * $unitPrice);
                                 })
-                                ->columnSpan(1),
+                                ->columnSpan(3),
 
                             Forms\Components\TextInput::make('unit_price')
                                 ->label('Unit Price')
@@ -169,7 +169,7 @@ class PurchaseOrderForm
                                     $quantity = $get('ordered_quantity') ?? 0;
                                     $set('subtotal', $quantity * $state);
                                 })
-                                ->columnSpan(1),
+                                ->columnSpan(4),
 
                             Forms\Components\Placeholder::make('subtotal')
                                 ->label('Subtotal')
@@ -180,7 +180,7 @@ class PurchaseOrderForm
 
                                     return 'Rp '.number_format($subtotal, 0, ',', '.');
                                 })
-                                ->columnSpan(1),
+                                ->columnSpan(4),
                         ])
                         ->columns(6)
                         ->defaultItems(1)

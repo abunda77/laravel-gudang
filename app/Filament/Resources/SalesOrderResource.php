@@ -18,7 +18,7 @@ class SalesOrderResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Transactions';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $navigationLabel = 'Sales Orders';
 

@@ -9,6 +9,11 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +23,7 @@ class PurchaseOrderTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['supplier', 'creator']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['supplier', 'creator']))
             ->columns([
                 Tables\Columns\TextColumn::make('po_number')
                     ->label('PO Number')
@@ -105,16 +110,117 @@ class PurchaseOrderTable
                         return $query
                             ->when(
                                 $data['order_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('order_date', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('order_date', '>=', $date),
                             )
                             ->when(
                                 $data['order_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('order_date', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('order_date', '<=', $date),
                             );
                     }),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->infolist([
+                        Section::make('Purchase Order Information')
+                            ->schema([
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('po_number')
+                                            ->label('PO Number')
+                                            ->weight(FontWeight::Bold)
+                                            ->copyable(),
+
+                                        TextEntry::make('supplier.name')
+                                            ->label('Supplier')
+                                            ->weight(FontWeight::SemiBold),
+
+                                        TextEntry::make('status')
+                                            ->label('Status')
+                                            ->badge()
+                                            ->color(fn($state): string => match ($state?->value ?? $state) {
+                                                'draft' => 'gray',
+                                                'sent' => 'info',
+                                                'partially_received' => 'warning',
+                                                'completed' => 'success',
+                                                'cancelled' => 'danger',
+                                                default => 'gray',
+                                            }),
+                                    ]),
+
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('order_date')
+                                            ->label('Order Date')
+                                            ->date('d M Y'),
+
+                                        TextEntry::make('expected_date')
+                                            ->label('Expected Delivery Date')
+                                            ->date('d M Y'),
+
+                                        TextEntry::make('total_amount')
+                                            ->label('Total Amount')
+                                            ->money('IDR')
+                                            ->weight(FontWeight::Bold)
+                                            ->size('lg'),
+                                    ]),
+
+                                TextEntry::make('notes')
+                                    ->label('Notes')
+                                    ->placeholder('No notes')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Section::make('Order Items')
+                            ->schema([
+                                RepeatableEntry::make('items')
+                                    ->label('')
+                                    ->schema([
+                                        TextEntry::make('product.name')
+                                            ->label('Product')
+                                            ->weight(FontWeight::SemiBold),
+
+                                        TextEntry::make('productVariant.name')
+                                            ->label('Variant')
+                                            ->placeholder('No variant')
+                                            ->color('gray'),
+
+                                        Grid::make(3)
+                                            ->schema([
+                                                TextEntry::make('ordered_quantity')
+                                                    ->label('Quantity')
+                                                    ->suffix(' units'),
+
+                                                TextEntry::make('unit_price')
+                                                    ->label('Unit Price')
+                                                    ->money('IDR'),
+
+                                                TextEntry::make('subtotal')
+                                                    ->label('Subtotal')
+                                                    ->money('IDR')
+                                                    ->weight(FontWeight::Bold)
+                                                    ->state(fn($record) => $record->ordered_quantity * $record->unit_price),
+                                            ]),
+                                    ])
+                                    ->contained(false),
+                            ])
+                            ->collapsible(),
+
+                        Section::make('Additional Information')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        TextEntry::make('creator.name')
+                                            ->label('Created By'),
+
+                                        TextEntry::make('created_at')
+                                            ->label('Created At')
+                                            ->dateTime('d M Y, H:i'),
+                                    ]),
+                            ])
+                            ->collapsed()
+                            ->collapsible(),
+                    ])
+                    ->modalWidth('5xl'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

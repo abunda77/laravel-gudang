@@ -37,7 +37,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('Warehouse Management System')
+            ->brandName('Bosco Warehouse System')
             ->brandLogo(function () {
                 // Check if Filament is in dark mode
                 $isDarkMode = (bool) (request()->cookie('filament_dark_mode') ?? false);

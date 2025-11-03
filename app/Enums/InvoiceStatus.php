@@ -6,4 +6,5 @@ enum InvoiceStatus: string
 {
     case PAID = 'paid';
     case UNPAID = 'unpaid';
+    case OVERDUE = 'overdue';
 }

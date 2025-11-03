@@ -10,6 +10,12 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,7 +113,99 @@ class InboundOperationTable
                     ->toggle(),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->infolist([
+                        Section::make('Inbound Operation Information')
+                            ->schema([
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('inbound_number')
+                                            ->label('Inbound Number')
+                                            ->weight(FontWeight::Bold)
+                                            ->copyable(),
+
+                                        TextEntry::make('purchaseOrder.po_number')
+                                            ->label('PO Number')
+                                            ->weight(FontWeight::SemiBold)
+                                            ->url(fn ($record) => route('filament.admin.resources.purchase-orders.edit', ['record' => $record->purchase_order_id]))
+                                            ->color('info'),
+
+                                        IconEntry::make('is_confirmed')
+                                            ->label('Stock Confirmed')
+                                            ->boolean()
+                                            ->state(fn ($record) => $record->stockMovements()->exists())
+                                            ->trueIcon('heroicon-o-check-circle')
+                                            ->falseIcon('heroicon-o-x-circle')
+                                            ->trueColor('success')
+                                            ->falseColor('danger'),
+                                    ]),
+
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('purchaseOrder.supplier.name')
+                                            ->label('Supplier'),
+
+                                        TextEntry::make('received_date')
+                                            ->label('Received Date')
+                                            ->dateTime('d M Y, H:i'),
+
+                                        TextEntry::make('receiver.name')
+                                            ->label('Received By'),
+                                    ]),
+
+                                TextEntry::make('notes')
+                                    ->label('Notes')
+                                    ->placeholder('No notes')
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Section::make('Received Items')
+                            ->schema([
+                                RepeatableEntry::make('items')
+                                    ->label('')
+                                    ->schema([
+                                        TextEntry::make('product.name')
+                                            ->label('Product')
+                                            ->weight(FontWeight::SemiBold),
+
+                                        TextEntry::make('productVariant.name')
+                                            ->label('Variant')
+                                            ->placeholder('No variant')
+                                            ->color('gray'),
+
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextEntry::make('received_quantity')
+                                                    ->label('Received Quantity')
+                                                    ->suffix(' units'),
+
+                                                TextEntry::make('purchaseOrderItem.ordered_quantity')
+                                                    ->label('Ordered Quantity')
+                                                    ->suffix(' units')
+                                                    ->color('gray'),
+                                            ]),
+                                    ])
+                                    ->contained(false),
+                            ])
+                            ->collapsible(),
+
+                        Section::make('Additional Information')
+                            ->schema([
+                                Grid::make(2)
+                                    ->schema([
+                                        TextEntry::make('created_at')
+                                            ->label('Created At')
+                                            ->dateTime('d M Y, H:i'),
+
+                                        TextEntry::make('updated_at')
+                                            ->label('Last Updated')
+                                            ->dateTime('d M Y, H:i'),
+                                    ]),
+                            ])
+                            ->collapsed()
+                            ->collapsible(),
+                    ])
+                    ->modalWidth('5xl'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

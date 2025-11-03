@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -36,7 +37,7 @@ class GenerateMonthlyReport implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        public User $user,
+        public int $userId,
         public Carbon $month,
         public string $reportType = 'sales'
     ) {}
@@ -46,6 +47,11 @@ class GenerateMonthlyReport implements ShouldQueue
      */
     public function handle(ReportService $reportService): void
     {
+        $user = User::find($this->userId);
+        if (!$user) {
+            throw new \Exception("User not found: {$this->userId}");
+        }
+
         $startDate = $this->month->copy()->startOfMonth();
         $endDate = $this->month->copy()->endOfMonth();
 
@@ -73,7 +79,7 @@ class GenerateMonthlyReport implements ShouldQueue
             'startDate' => $startDate,
             'endDate' => $endDate,
             'generatedAt' => now(),
-            'generatedBy' => $this->user->name,
+            'generatedBy' => $user->name,
         ]);
 
         // Store the PDF
@@ -87,7 +93,7 @@ class GenerateMonthlyReport implements ShouldQueue
         Storage::put($filename, $pdf->output());
 
         // Notify the user
-        $this->user->notify(new MonthlyReportGenerated(
+        $user->notify(new MonthlyReportGenerated(
             $filename,
             $this->reportType,
             $this->month
@@ -100,8 +106,8 @@ class GenerateMonthlyReport implements ShouldQueue
     public function failed(\Throwable $exception): void
     {
         // Log the failure or notify administrators
-        \Log::error('Monthly report generation failed', [
-            'user_id' => $this->user->id,
+        Log::error('Monthly report generation failed', [
+            'user_id' => $this->userId,
             'month' => $this->month->format('Y-m'),
             'report_type' => $this->reportType,
             'error' => $exception->getMessage(),

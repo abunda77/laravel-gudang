@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class SalesOrder extends Model
 {
@@ -54,7 +55,7 @@ class SalesOrder extends Model
      */
     protected static function generateUniqueNumber(string $prefix, string $column): string
     {
-        return \DB::transaction(function () use ($prefix, $column) {
+        return DB::transaction(function () use ($prefix, $column) {
             $date = now()->format('Ymd');
             $maxAttempts = 10;
             $attempt = 0;

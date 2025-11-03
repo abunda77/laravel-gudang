@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class Reports extends Page
 {
@@ -51,12 +52,23 @@ class Reports extends Page
                         ->helperText('Select the month for the report'),
                 ])
                 ->action(function (array $data): void {
+                    $user = Auth::user();
+                    if (!$user) {
+                        Notification::make()
+                            ->title('Authentication Required')
+                            ->body('You must be logged in to generate reports.')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    $userId = $user->id;
+
                     $month = Carbon::parse($data['month']);
                     $reportType = $data['report_type'];
 
                     // Dispatch the job
                     GenerateMonthlyReport::dispatch(
-                        auth()->user(),
+                        $userId,
                         $month,
                         $reportType
                     );
