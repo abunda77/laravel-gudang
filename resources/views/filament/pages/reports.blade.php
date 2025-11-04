@@ -185,6 +185,20 @@
             </div>
         </div>
 
+        <!-- Generated Reports History -->
+        <div>
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Generated Reports History</h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    View and download previously generated reports
+                </p>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                {{ $this->table }}
+            </div>
+        </div>
+
         <!-- Technical Info Section -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6">

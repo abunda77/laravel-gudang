@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\GeneratedReport;
 use App\Models\User;
 use App\Notifications\MonthlyReportGenerated;
 use App\Services\ReportService;
@@ -91,6 +92,23 @@ class GenerateMonthlyReport implements ShouldQueue
         );
 
         Storage::put($filename, $pdf->output());
+
+        // Save to database
+        $reportTypeLabels = [
+            'sales' => 'Sales Report',
+            'purchase' => 'Purchase Report',
+            'stock_valuation' => 'Stock Valuation Report',
+            'low_stock' => 'Low Stock Report',
+        ];
+
+        GeneratedReport::create([
+            'user_id' => $this->userId,
+            'report_type' => $this->reportType,
+            'report_name' => $reportTypeLabels[$this->reportType] . ' - ' . $this->month->format('F Y'),
+            'file_path' => $filename,
+            'report_month' => $this->month,
+            'status' => 'completed',
+        ]);
 
         // Notify the user
         $user->notify(new MonthlyReportGenerated(

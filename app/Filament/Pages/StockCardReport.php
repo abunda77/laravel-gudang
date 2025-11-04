@@ -42,7 +42,7 @@ class StockCardReport extends Page implements HasTable
         return $table
             ->query(
                 StockMovement::query()
-                    ->with(['product', 'user'])
+                    ->with(['product', 'creator'])
                     ->when($this->product, fn(Builder $query) => $query->where('product_id', $this->product))
                     ->orderBy('created_at', 'desc')
             )
@@ -72,17 +72,25 @@ class StockCardReport extends Page implements HasTable
                 Tables\Columns\TextColumn::make('type')
                     ->label('Type')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => strtoupper($state))
-                    ->color(fn(string $state): string => match ($state) {
-                        'in' => 'success',
-                        'out' => 'danger',
-                        'adjustment' => 'warning',
+                    ->formatStateUsing(fn($state): string => match ($state) {
+                        \App\Enums\StockMovementType::INBOUND => 'INBOUND',
+                        \App\Enums\StockMovementType::OUTBOUND => 'OUTBOUND',
+                        \App\Enums\StockMovementType::ADJUSTMENT_PLUS => 'ADJUSTMENT +',
+                        \App\Enums\StockMovementType::ADJUSTMENT_MINUS => 'ADJUSTMENT -',
+                        default => strtoupper($state->value ?? $state),
+                    })
+                    ->color(fn($state): string => match ($state) {
+                        \App\Enums\StockMovementType::INBOUND => 'success',
+                        \App\Enums\StockMovementType::OUTBOUND => 'danger',
+                        \App\Enums\StockMovementType::ADJUSTMENT_PLUS => 'warning',
+                        \App\Enums\StockMovementType::ADJUSTMENT_MINUS => 'warning',
                         default => 'gray',
                     })
-                    ->icon(fn(string $state): string => match ($state) {
-                        'in' => 'heroicon-o-arrow-down-tray',
-                        'out' => 'heroicon-o-arrow-up-tray',
-                        'adjustment' => 'heroicon-o-adjustments-horizontal',
+                    ->icon(fn($state): string => match ($state) {
+                        \App\Enums\StockMovementType::INBOUND => 'heroicon-o-arrow-down-tray',
+                        \App\Enums\StockMovementType::OUTBOUND => 'heroicon-o-arrow-up-tray',
+                        \App\Enums\StockMovementType::ADJUSTMENT_PLUS => 'heroicon-o-adjustments-horizontal',
+                        \App\Enums\StockMovementType::ADJUSTMENT_MINUS => 'heroicon-o-adjustments-horizontal',
                         default => 'heroicon-o-question-mark-circle',
                     }),
 
@@ -121,7 +129,7 @@ class StockCardReport extends Page implements HasTable
                     ->tooltip(fn(?string $state): ?string => $state)
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('creator.name')
                     ->label('By')
                     ->placeholder('System')
                     ->icon('heroicon-o-user')
@@ -137,9 +145,10 @@ class StockCardReport extends Page implements HasTable
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Movement Type')
                     ->options([
-                        'in' => 'In',
-                        'out' => 'Out',
-                        'adjustment' => 'Adjustment',
+                        'inbound' => 'Inbound',
+                        'outbound' => 'Outbound',
+                        'adjustment_plus' => 'Adjustment (+)',
+                        'adjustment_minus' => 'Adjustment (-)',
                     ]),
 
                 Tables\Filters\Filter::make('created_at')
