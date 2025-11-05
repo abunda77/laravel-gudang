@@ -205,7 +205,7 @@ class StockMovementService
 
                 StockMovement::create([
                     'product_id' => $product->id,
-                    'product_variant_id' => null, // Stock opname currently doesn't support variants
+                    'product_variant_id' => null,
                     'quantity' => $variance,
                     'type' => $type,
                     'reference_type' => StockOpname::class,
@@ -232,6 +232,61 @@ class StockMovementService
                 'trace' => $e->getTraceAsString(),
             ]);
             throw new \RuntimeException('Failed to record stock adjustment: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Record stock adjustment for a product variant from stock opname (physical count).
+     *
+     * @param StockOpname $opname
+     * @param ProductVariant $variant
+     * @param int $variance Positive for surplus, negative for shortage
+     * @return void
+     * @throws \Throwable
+     */
+    public function recordAdjustmentForVariant(StockOpname $opname, ProductVariant $variant, int $variance): void
+    {
+        if ($variance == 0) {
+            return; // No adjustment needed
+        }
+
+        try {
+            DB::transaction(function () use ($opname, $variant, $variance) {
+                $type = $variance > 0
+                    ? StockMovementType::ADJUSTMENT_PLUS
+                    : StockMovementType::ADJUSTMENT_MINUS;
+
+                StockMovement::create([
+                    'product_id' => $variant->product_id,
+                    'product_variant_id' => $variant->id,
+                    'quantity' => $variance,
+                    'type' => $type,
+                    'reference_type' => StockOpname::class,
+                    'reference_id' => $opname->id,
+                    'notes' => "Stock opname adjustment for variant {$variant->name}: " . ($variance > 0 ? "surplus" : "shortage") . " of " . abs($variance) . " units",
+                    'created_by' => auth()->id(),
+                ]);
+
+                // Invalidate cache for this product and variant
+                $this->invalidateStockCache($variant->product_id, $variant->id);
+            });
+
+            Log::info('Stock adjustment for variant recorded successfully', [
+                'stock_opname_id' => $opname->id,
+                'product_id' => $variant->product_id,
+                'product_variant_id' => $variant->id,
+                'variance' => $variance,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to record stock adjustment for variant', [
+                'stock_opname_id' => $opname->id,
+                'product_id' => $variant->product_id,
+                'product_variant_id' => $variant->id,
+                'variance' => $variance,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new \RuntimeException('Failed to record stock adjustment for variant: ' . $e->getMessage(), 0, $e);
         }
     }
 

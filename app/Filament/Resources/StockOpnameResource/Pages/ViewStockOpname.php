@@ -35,11 +35,21 @@ class ViewStockOpname extends ViewRecord
                             
                             foreach ($this->record->items as $item) {
                                 if ($item->variance != 0) {
-                                    $stockService->recordAdjustment(
-                                        $this->record,
-                                        $item->product,
-                                        $item->variance
-                                    );
+                                    // If item has variant, record adjustment for variant
+                                    if ($item->product_variant_id) {
+                                        $stockService->recordAdjustmentForVariant(
+                                            $this->record,
+                                            $item->productVariant,
+                                            $item->variance
+                                        );
+                                    } else {
+                                        // Otherwise, record adjustment for product
+                                        $stockService->recordAdjustment(
+                                            $this->record,
+                                            $item->product,
+                                            $item->variance
+                                        );
+                                    }
                                 }
                             }
                         });
@@ -103,9 +113,15 @@ class ViewStockOpname extends ViewRecord
                                 Forms\Components\Placeholder::make('product_name')
                                     ->label('Product')
                                     ->content(fn ($record): string => $record->product->name),
+                                Forms\Components\Placeholder::make('variant_name')
+                                    ->label('Variant')
+                                    ->content(fn ($record): string => $record->productVariant?->name ?? '-')
+                                    ->visible(fn ($record): bool => $record->product_variant_id !== null),
                                 Forms\Components\Placeholder::make('product_sku')
                                     ->label('SKU')
-                                    ->content(fn ($record): string => $record->product->sku),
+                                    ->content(fn ($record): string => 
+                                        $record->productVariant?->sku ?? $record->product->sku
+                                    ),
                                 Forms\Components\Placeholder::make('system_stock')
                                     ->label('System Stock')
                                     ->content(fn ($record): string => 
@@ -122,7 +138,7 @@ class ViewStockOpname extends ViewRecord
                                         ($record->variance > 0 ? '+' : '') . $record->variance . ' ' . $record->product->unit
                                     ),
                             ])
-                            ->columns(5)
+                            ->columns(6)
                             ->disabled()
                             ->addable(false)
                             ->deletable(false)

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\StockOpnameResource\Schemas;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\StockMovementService;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
@@ -51,20 +52,76 @@ class StockOpnameForm
                                 ->searchable()
                                 ->required()
                                 ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set) {
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                     if ($state) {
                                         $product = Product::find($state);
                                         if ($product) {
+                                            // Reset variant selection when product changes
+                                            $set('product_variant_id', null);
+                                            
+                                            // If product has no variants, calculate stock directly
+                                            if (!$product->variants()->exists()) {
+                                                $stockService = app(StockMovementService::class);
+                                                $currentStock = $stockService->getCurrentStock($product);
+                                                $set('system_stock', $currentStock);
+                                                
+                                                if (!$get('physical_stock')) {
+                                                    $set('physical_stock', $currentStock);
+                                                }
+                                            } else {
+                                                // If product has variants, wait for variant selection
+                                                $set('system_stock', 0);
+                                                $set('physical_stock', 0);
+                                            }
+                                        }
+                                    }
+                                })
+                                ->disabled(fn ($context) => $context === 'edit')
+                                ->dehydrated()
+                                ->columnSpan(2),
+                            
+                            Forms\Components\Select::make('product_variant_id')
+                                ->label('Variant')
+                                ->options(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return [];
+                                    }
+                                    return ProductVariant::where('product_id', $productId)
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id');
+                                })
+                                ->searchable()
+                                ->reactive()
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    if ($state) {
+                                        $variant = ProductVariant::find($state);
+                                        if ($variant) {
                                             $stockService = app(StockMovementService::class);
-                                            $currentStock = $stockService->getCurrentStock($product);
+                                            $currentStock = $stockService->getCurrentStockForVariant($variant);
                                             $set('system_stock', $currentStock);
                                             
-                                            // If physical stock is not set, default to system stock
-                                            if (!$set('physical_stock')) {
+                                            if (!$get('physical_stock')) {
                                                 $set('physical_stock', $currentStock);
                                             }
                                         }
                                     }
+                                })
+                                ->visible(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return false;
+                                    }
+                                    $product = Product::find($productId);
+                                    return $product && $product->variants()->exists();
+                                })
+                                ->required(function (callable $get) {
+                                    $productId = $get('product_id');
+                                    if (!$productId) {
+                                        return false;
+                                    }
+                                    $product = Product::find($productId);
+                                    return $product && $product->variants()->exists();
                                 })
                                 ->disabled(fn ($context) => $context === 'edit')
                                 ->dehydrated()
@@ -136,7 +193,10 @@ class StockOpnameForm
                         ->collapsible()
                         ->itemLabel(fn (array $state): ?string => 
                             isset($state['product_id']) 
-                                ? Product::find($state['product_id'])?->name 
+                                ? (Product::find($state['product_id'])?->name . 
+                                   (isset($state['product_variant_id']) && $state['product_variant_id'] 
+                                       ? ' - ' . ProductVariant::find($state['product_variant_id'])?->name 
+                                       : ''))
                                 : 'New Product'
                         )
                         ->columnSpanFull()

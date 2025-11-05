@@ -13,35 +13,35 @@
         
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
+            font-size: 8.5pt;
+            line-height: 1.3;
             color: #000;
         }
         
         .container {
-            padding: 20px;
+            padding: 15px;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             border-bottom: 2px solid #000;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         
         .header h1 {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .header p {
-            font-size: 9pt;
+            font-size: 8pt;
             color: #333;
         }
         
         .document-info {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         
         .document-info table {
@@ -49,38 +49,58 @@
         }
         
         .document-info td {
-            padding: 3px 0;
+            padding: 2px 0;
             vertical-align: top;
+            font-size: 8.5pt;
         }
         
         .document-info td:first-child {
-            width: 150px;
+            width: 110px;
             font-weight: bold;
         }
         
         .document-info td:nth-child(2) {
-            width: 10px;
+            width: 8px;
+        }
+        
+        .two-column-section {
+            display: table;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        
+        .column {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding-right: 10px;
+        }
+        
+        .column:last-child {
+            padding-right: 0;
+            padding-left: 10px;
         }
         
         .section-title {
             font-weight: bold;
-            font-size: 11pt;
-            margin: 15px 0 10px 0;
-            padding: 5px;
+            font-size: 9pt;
+            margin: 8px 0 6px 0;
+            padding: 4px;
             background-color: #f0f0f0;
-            border-left: 4px solid #333;
+            border-left: 3px solid #333;
         }
         
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
+            font-size: 8pt;
         }
         
         .items-table th,
         .items-table td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 5px;
             text-align: left;
         }
         
@@ -88,11 +108,12 @@
             background-color: #e0e0e0;
             font-weight: bold;
             text-align: center;
+            font-size: 8pt;
         }
         
         .items-table td:nth-child(1) {
             text-align: center;
-            width: 30px;
+            width: 25px;
         }
         
         .items-table td:nth-child(4),
@@ -101,7 +122,7 @@
         }
         
         .signature-section {
-            margin-top: 40px;
+            margin-top: 20px;
             display: table;
             width: 100%;
         }
@@ -110,50 +131,53 @@
             display: table-cell;
             width: 33%;
             text-align: center;
-            padding: 10px;
+            padding: 5px;
         }
         
         .signature-box p {
-            margin-bottom: 60px;
+            margin-bottom: 40px;
             font-weight: bold;
+            font-size: 8pt;
         }
         
         .signature-line {
             border-top: 1px solid #000;
-            padding-top: 5px;
-            margin: 0 20px;
+            padding-top: 3px;
+            margin: 0 15px;
+            font-size: 8pt;
         }
         
         .notes {
-            margin-top: 20px;
-            padding: 10px;
+            margin-top: 10px;
+            padding: 6px;
             background-color: #f9f9f9;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 3px;
+            font-size: 8pt;
         }
         
         .notes strong {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .barcode {
             text-align: center;
-            margin-top: 20px;
-            padding: 10px;
+            margin-top: 12px;
+            padding: 6px;
         }
         
         .barcode img {
-            height: 40px;
+            height: 35px;
         }
         
         .footer {
-            margin-top: 30px;
+            margin-top: 15px;
             text-align: center;
-            font-size: 8pt;
+            font-size: 7pt;
             color: #666;
             border-top: 1px solid #ddd;
-            padding-top: 10px;
+            padding-top: 6px;
         }
     </style>
 </head>
@@ -162,7 +186,7 @@
         <!-- Header -->
         <div class="header">
             <h1>SURAT JALAN</h1>
-            <p>Warehouse Management System</p>
+            <p>BOSCO MANDIRI SYSTEM</p>
         </div>
 
         <!-- Document Information -->
@@ -191,53 +215,63 @@
             </table>
         </div>
 
-        <!-- Customer Information -->
-        <div class="section-title">Informasi Pelanggan</div>
-        <div class="document-info">
-            <table>
-                <tr>
-                    <td>Nama Pelanggan</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->outboundOperation->salesOrder->customer->name }}</td>
-                </tr>
-                <tr>
-                    <td>Alamat</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->outboundOperation->salesOrder->customer->address ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Telepon</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->outboundOperation->salesOrder->customer->phone ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td>Penerima</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->recipient_name ?? '-' }}</td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Driver & Vehicle Information -->
-        <div class="section-title">Informasi Pengiriman</div>
-        <div class="document-info">
-            <table>
-                <tr>
-                    <td>Nama Driver</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->driver->name }}</td>
-                </tr>
-                <tr>
-                    <td>No. Telepon Driver</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->driver->phone }}</td>
-                </tr>
-                <tr>
-                    <td>Kendaraan</td>
-                    <td>:</td>
-                    <td>{{ $deliveryOrder->vehicle->license_plate }} ({{ $deliveryOrder->vehicle->vehicle_type }})</td>
-                </tr>
-            </table>
+        <!-- Customer & Delivery Information (Two Columns) -->
+        <div class="two-column-section">
+            <div class="column">
+                <div class="section-title">Informasi Pelanggan</div>
+                <div class="document-info">
+                    <table>
+                        <tr>
+                            <td>Nama Pelanggan</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->outboundOperation->salesOrder->customer->name }}</td>
+                        </tr>
+                        <tr>
+                            <td>Alamat</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->outboundOperation->salesOrder->customer->address ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Telepon</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->outboundOperation->salesOrder->customer->phone ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Penerima</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->recipient_name ?? '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="column">
+                <div class="section-title">Informasi Pengiriman</div>
+                <div class="document-info">
+                    <table>
+                        <tr>
+                            <td>Nama Driver</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->driver->name }}</td>
+                        </tr>
+                        <tr>
+                            <td>No. Telepon</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->driver->phone }}</td>
+                        </tr>
+                        <tr>
+                            <td>Kendaraan</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->vehicle->license_plate }}</td>
+                        </tr>
+                        <tr>
+                            <td>Jenis</td>
+                            <td>:</td>
+                            <td>{{ $deliveryOrder->vehicle->vehicle_type }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- Items Table -->

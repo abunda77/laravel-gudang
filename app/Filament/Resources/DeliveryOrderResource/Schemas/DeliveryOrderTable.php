@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\DeliveryOrderResource\Schemas;
 
 use App\Models\DeliveryOrder;
+use App\Services\DocumentGenerationService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -10,6 +12,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,8 +110,33 @@ class DeliveryOrderTable
                     ->label('Cetak Surat Jalan')
                     ->icon('heroicon-o-printer')
                     ->color('success')
-                    ->url(fn (DeliveryOrder $record): string => route('delivery-orders.print', $record))
-                    ->openUrlInNewTab(),
+                    ->action(function (DeliveryOrder $record) {
+                        try {
+                            $deliveryOrder = $record->load([
+                                'outboundOperation.items.product.category',
+                                'outboundOperation.items.productVariant',
+                                'outboundOperation.salesOrder.customer',
+                                'outboundOperation.preparer',
+                                'driver',
+                                'vehicle'
+                            ]);
+
+                            $pdf = Pdf::loadView('delivery-orders.pdf', compact('deliveryOrder'));
+                            $pdf->setPaper('a4', 'portrait');
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, "Surat-Jalan-{$record->do_number}.pdf");
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Error generating PDF')
+                                ->body('Failed to generate delivery order PDF: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
