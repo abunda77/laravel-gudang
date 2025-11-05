@@ -3,14 +3,13 @@
 namespace App\Filament\Resources\DeliveryOrderResource\Schemas;
 
 use App\Models\DeliveryOrder;
-use App\Services\DocumentGenerationService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -104,6 +103,12 @@ class DeliveryOrderTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('print_delivery_note')
+                    ->label('Cetak Surat Jalan')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->url(fn (DeliveryOrder $record): string => route('delivery-orders.print', $record))
+                    ->openUrlInNewTab(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

@@ -22,14 +22,18 @@ class DocumentGenerationService
     public function generateDeliveryOrder(DeliveryOrder $deliveryOrder): string
     {
         try {
-            $pdf = Pdf::loadView('documents.delivery-order', [
+            $pdf = Pdf::loadView('delivery-orders.pdf', [
                 'deliveryOrder' => $deliveryOrder->load([
-                    'outboundOperation.items.product',
+                    'outboundOperation.items.product.category',
+                    'outboundOperation.items.productVariant',
                     'outboundOperation.salesOrder.customer',
+                    'outboundOperation.preparer',
                     'driver',
                     'vehicle'
                 ])
             ]);
+
+            $pdf->setPaper('a4', 'portrait');
 
             Log::info('Delivery order PDF generated successfully', [
                 'delivery_order_id' => $deliveryOrder->id,
