@@ -1,0 +1,158 @@
+{
+  "purchase_order_item_created": {
+    "description": "Payload yang dikirim saat Purchase Order Item dibuat",
+    "example_with_variant": {
+      "event": "purchase_order_item_created",
+      "timestamp": "2025-11-05T10:30:00+07:00",
+      "data": {
+        "item_id": 123,
+        "purchase_order": {
+          "id": 45,
+          "order_number": "PO-20251105-0001",
+          "status": "pending",
+          "order_date": "2025-11-05",
+          "supplier": {
+            "id": 10,
+            "name": "PT Supplier ABC"
+          },
+          "total_amount": 5000000
+        },
+        "product": {
+          "id": 25,
+          "name": "Produk A",
+          "sku": "PRD-001"
+        },
+        "variant": {
+          "id": 30,
+          "name": "Varian Merah",
+          "sku": "PRD-001-RED"
+        },
+        "quantity": 100,
+        "unit_price": 50000,
+        "subtotal": 5000000,
+        "notes": "Catatan tambahan"
+      }
+    },
+    "example_without_variant": {
+      "event": "purchase_order_item_created",
+      "timestamp": "2025-11-05T10:30:00+07:00",
+      "data": {
+        "item_id": 124,
+        "purchase_order": {
+          "id": 45,
+          "order_number": "PO-20251105-0001",
+          "status": "pending",
+          "order_date": "2025-11-05",
+          "supplier": {
+            "id": 10,
+            "name": "PT Supplier ABC"
+          },
+          "total_amount": 5000000
+        },
+        "product": {
+          "id": 26,
+          "name": "Produk B",
+          "sku": "PRD-002"
+        },
+        "variant": null,
+        "quantity": 50,
+        "unit_price": 100000,
+        "subtotal": 5000000,
+        "notes": null
+      }
+    }
+  },
+  "sales_order_item_created": {
+    "description": "Payload yang dikirim saat Sales Order Item dibuat",
+    "example_with_variant": {
+      "event": "sales_order_item_created",
+      "timestamp": "2025-11-05T10:30:00+07:00",
+      "data": {
+        "item_id": 456,
+        "sales_order": {
+          "id": 78,
+          "order_number": "SO-20251105-0001",
+          "status": "pending",
+          "order_date": "2025-11-05",
+          "customer": {
+            "id": 15,
+            "name": "PT Customer XYZ"
+          },
+          "total_amount": 7500000
+        },
+        "product": {
+          "id": 25,
+          "name": "Produk A",
+          "sku": "PRD-001"
+        },
+        "variant": {
+          "id": 30,
+          "name": "Varian Merah",
+          "sku": "PRD-001-RED"
+        },
+        "quantity": 150,
+        "unit_price": 50000,
+        "subtotal": 7500000,
+        "notes": "Pengiriman segera"
+      }
+    },
+    "example_without_variant": {
+      "event": "sales_order_item_created",
+      "timestamp": "2025-11-05T10:30:00+07:00",
+      "data": {
+        "item_id": 457,
+        "sales_order": {
+          "id": 78,
+          "order_number": "SO-20251105-0001",
+          "status": "pending",
+          "order_date": "2025-11-05",
+          "customer": {
+            "id": 15,
+            "name": "PT Customer XYZ"
+          },
+          "total_amount": 7500000
+        },
+        "product": {
+          "id": 26,
+          "name": "Produk B",
+          "sku": "PRD-002"
+        },
+        "variant": null,
+        "quantity": 75,
+        "unit_price": 100000,
+        "subtotal": 7500000,
+        "notes": null
+      }
+    }
+  },
+  "n8n_workflow_example": {
+    "description": "Contoh workflow n8n untuk menerima webhook dan mengirim ke WhatsApp",
+    "nodes": [
+      {
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "warehouse-notification",
+          "responseMode": "onReceived"
+        }
+      },
+      {
+        "name": "Format Message",
+        "type": "n8n-nodes-base.function",
+        "parameters": {
+          "functionCode": "const data = items[0].json.data;\nconst event = items[0].json.event;\n\nlet message = '';\n\nif (event === 'purchase_order_item_created') {\n  message = `🛒 *Purchase Order Baru*\\n\\n`;\n  message += `PO Number: ${data.purchase_order.order_number}\\n`;\n  message += `Supplier: ${data.purchase_order.supplier.name}\\n`;\n  message += `Produk: ${data.product.name}`;\n  if (data.variant) {\n    message += ` (${data.variant.name})`;\n  }\n  message += `\\nQuantity: ${data.quantity} unit\\n`;\n  message += `Harga: Rp ${data.unit_price.toLocaleString('id-ID')}\\n`;\n  message += `Subtotal: Rp ${data.subtotal.toLocaleString('id-ID')}\\n\\n`;\n  message += `Total Order: Rp ${data.purchase_order.total_amount.toLocaleString('id-ID')}`;\n} else if (event === 'sales_order_item_created') {\n  message = `📦 *Sales Order Baru*\\n\\n`;\n  message += `SO Number: ${data.sales_order.order_number}\\n`;\n  message += `Customer: ${data.sales_order.customer.name}\\n`;\n  message += `Produk: ${data.product.name}`;\n  if (data.variant) {\n    message += ` (${data.variant.name})`;\n  }\n  message += `\\nQuantity: ${data.quantity} unit\\n`;\n  message += `Harga: Rp ${data.unit_price.toLocaleString('id-ID')}\\n`;\n  message += `Subtotal: Rp ${data.subtotal.toLocaleString('id-ID')}\\n\\n`;\n  message += `Total Order: Rp ${data.sales_order.total_amount.toLocaleString('id-ID')}`;\n}\n\nreturn [{ json: { message, phone: '628123456789' } }];"
+        }
+      },
+      {
+        "name": "Send WhatsApp",
+        "type": "n8n-nodes-base.whatsapp",
+        "parameters": {
+          "operation": "sendMessage",
+          "phoneNumber": "={{$json.phone}}",
+          "message": "={{$json.message}}"
+        }
+      }
+    ]
+  }
+}

@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This configuration is used for sending webhook notifications to external
+    | services like n8n for WhatsApp notifications.
+    |
+    */
+
+    'webhook_wa_n8n_purchaseorder' => env('WEBHOOK_WA_N8N_PURCHASEORDER'),
+    'webhook_wa_n8n_salesorder' => env('WEBHOOK_WA_N8N_SALESORDER'),
+
 ];

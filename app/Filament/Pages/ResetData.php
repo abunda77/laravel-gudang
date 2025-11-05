@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use UnitEnum;
@@ -21,7 +22,10 @@ class ResetData extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasRole('super_admin') ?? false;
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        
+        return $user && $user->hasRole('super_admin');
     }
 
     public static function getNavigationLabel(): string
@@ -47,8 +51,6 @@ class ResetData extends Page
     public function resetAllData(): void
     {
         try {
-            DB::beginTransaction();
-
             // Disable foreign key checks
             DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
@@ -92,8 +94,6 @@ class ResetData extends Page
             // Re-enable foreign key checks
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-            DB::commit();
-
             Notification::make()
                 ->title('Data berhasil direset')
                 ->success()
@@ -101,8 +101,6 @@ class ResetData extends Page
                 ->send();
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             // Re-enable foreign key checks in case of error
             DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
