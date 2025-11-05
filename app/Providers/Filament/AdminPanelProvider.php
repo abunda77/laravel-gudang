@@ -76,6 +76,9 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Reports')
                     ->icon('heroicon-o-chart-bar')
                     ->collapsed(false),
+                NavigationGroup::make('Settings')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->collapsed(false),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
