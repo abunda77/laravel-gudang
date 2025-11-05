@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\DB;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -34,7 +35,9 @@ class BackupDatabase extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->can('page_BackupDatabase');
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        return $user && $user->can('page_BackupDatabase');
     }
 
     protected function getHeaderActions(): array
@@ -107,7 +110,7 @@ class BackupDatabase extends Page implements HasTable
     protected function createBackupUsingPHP(array $dbConfig, string $backupPath): void
     {
         $database = $dbConfig['database'];
-        $tables = \DB::select('SHOW TABLES');
+        $tables = DB::select('SHOW TABLES');
         $tableKey = 'Tables_in_' . $database;
         
         $sql = "-- MySQL Backup\n";
@@ -118,12 +121,12 @@ class BackupDatabase extends Page implements HasTable
             $tableName = $table->$tableKey;
             
             // Get CREATE TABLE statement
-            $createTable = \DB::select("SHOW CREATE TABLE `{$tableName}`");
+            $createTable = DB::select("SHOW CREATE TABLE `{$tableName}`");
             $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
             $sql .= $createTable[0]->{'Create Table'} . ";\n\n";
             
             // Get table data
-            $rows = \DB::table($tableName)->get();
+            $rows = DB::table($tableName)->get();
             if ($rows->count() > 0) {
                 foreach ($rows as $row) {
                     $values = array_map(function($value) {
