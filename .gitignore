@@ -137,3 +137,4 @@ frankenphp
 frankenphp-worker.php
 rr
 .rr.yaml
+/bootstrap/cache/.gitignore
