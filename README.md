@@ -11,6 +11,9 @@ Sistem Manajemen Gudang berbasis web yang dibangun dengan Laravel 12 dan Filamen
 -   **Logistik**: Kelola delivery order dengan penugasan driver dan kendaraan
 -   **Keuangan**: Generate invoice dan tracking pembayaran
 -   **Pelaporan**: Kartu stok, alert stok rendah, laporan penjualan, dan valuasi stok
+-   **Queue Jobs**: Generate laporan bulanan secara background tanpa blocking UI
+-   **Webhook Notifications**: Integrasi dengan n8n untuk notifikasi WhatsApp otomatis
+-   **Role & Permissions**: Sistem otorisasi berbasis role menggunakan Filament Shield
 
 ## Teknologi
 
@@ -19,7 +22,9 @@ Sistem Manajemen Gudang berbasis web yang dibangun dengan Laravel 12 dan Filamen
 -   **Database**: MySQL/PostgreSQL (SQLite untuk development)
 -   **Frontend**: Vite 6 + Tailwind CSS 4
 -   **Queue**: Database driver (Redis untuk production)
+-   **Cache**: Database driver (Redis untuk production)
 -   **PDF Generation**: DomPDF
+-   **Permissions**: Spatie Laravel Permission + Filament Shield
 -   **Performance**: Laravel Octane (optional)
 
 ## Instalasi
@@ -77,7 +82,7 @@ Atau jalankan secara terpisah:
 
 ```bash
 php artisan serve          # Laravel server
-php artisan queue:listen   # Queue worker
+php artisan queue:work     # Queue worker
 php artisan pail          # Log viewer
 npm run dev               # Vite dev server
 ```
@@ -141,12 +146,24 @@ Quick deployment:
 
 ## Dokumentasi
 
--   [CARA_KERJA_VARIANT_INBOUND.md](CARA_KERJA_VARIANT_INBOUND.md) - Cara kerja variant inbound
+### Fitur Utama
 -   [PRODUCT_VARIANT_STOCK.md](PRODUCT_VARIANT_STOCK.md) - Manajemen stok variant
+-   [QUEUE_IMPLEMENTATION.md](QUEUE_IMPLEMENTATION.md) - Implementasi queue system
+-   [WEBHOOK_NOTIFICATION.md](WEBHOOK_NOTIFICATION.md) - Integrasi webhook dengan n8n
+-   [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) - Optimasi performa
+
+### Panduan Teknis
+-   [CARA_KERJA_VARIANT_INBOUND.md](CARA_KERJA_VARIANT_INBOUND.md) - Cara kerja variant inbound
 -   [PURCHASE_ORDER_VARIANT_SUPPORT.md](PURCHASE_ORDER_VARIANT_SUPPORT.md) - Support variant di PO
 -   [INBOUND_OPERATION_VARIANT_SUPPORT.md](INBOUND_OPERATION_VARIANT_SUPPORT.md) - Support variant di inbound
--   [QUEUE_IMPLEMENTATION.md](QUEUE_IMPLEMENTATION.md) - Implementasi queue system
--   [PERFORMANCE_OPTIMIZATIONS.md](PERFORMANCE_OPTIMIZATIONS.md) - Optimasi performa
+-   [TOTAL_AMOUNT_FIX.md](TOTAL_AMOUNT_FIX.md) - Fix perhitungan total amount
+
+### Setup & Deployment
+-   [DEPLOYMENT.md](DEPLOYMENT.md) - Panduan deployment lengkap
+-   [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) - Checklist production
+-   [QUEUE_SETUP.md](QUEUE_SETUP.md) - Setup queue workers
+-   [SHIELD_SETUP.md](SHIELD_SETUP.md) - Setup role & permissions
+-   [FILAMENT_4_MIGRATION.md](FILAMENT_4_MIGRATION.md) - Migrasi ke Filament 4
 
 ## Aturan Bisnis Penting
 
@@ -155,6 +172,9 @@ Quick deployment:
 3. **Stock quantity dihitung dari sum of movements (event sourcing)**
 4. **Audit trail lengkap untuk semua transaksi**
 5. **Role-based access control untuk semua resource**
+6. **Total amount dihitung otomatis via observer pattern**
+7. **Queue jobs untuk operasi berat (laporan bulanan)**
+8. **Webhook notifications untuk integrasi eksternal**
 
 ## Struktur Nomor Dokumen
 
@@ -164,6 +184,32 @@ Quick deployment:
 -   Outbound: `OUT-YYYYMMDD-####`
 -   Delivery Order: `DO-YYYYMMDD-####`
 -   Invoice: `INV-YYYYMMDD-####`
+
+## Fitur Tambahan
+
+### Queue Jobs
+Generate laporan bulanan secara background:
+- Laporan Penjualan
+- Laporan Pembelian
+- Valuasi Stok
+- Alert Stok Rendah
+
+Lihat [QUEUE_IMPLEMENTATION.md](QUEUE_IMPLEMENTATION.md) untuk detail.
+
+### Webhook Notifications
+Integrasi dengan n8n untuk notifikasi WhatsApp otomatis saat:
+- Purchase Order Item dibuat
+- Sales Order Item dibuat
+
+Lihat [WEBHOOK_NOTIFICATION.md](WEBHOOK_NOTIFICATION.md) untuk konfigurasi.
+
+### Role & Permissions
+Sistem otorisasi berbasis role menggunakan Filament Shield:
+- 152 permissions untuk semua resources
+- 13 policies untuk authorization
+- Super admin dengan akses penuh
+
+Lihat [SHIELD_SETUP.md](SHIELD_SETUP.md) untuk setup.
 
 ## License
 
