@@ -153,8 +153,9 @@ class PurchaseOrderForm
                                 ->default(1)
                                 ->reactive()
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                    $unitPrice = $get('unit_price') ?? 0;
-                                    $set('subtotal', $state * $unitPrice);
+                                    $quantity = floatval($state ?? 1);
+                                    $unitPrice = floatval($get('unit_price') ?? 0);
+                                    $set('subtotal', $quantity * $unitPrice);
                                 })
                                 ->columnSpan(3),
 
@@ -164,18 +165,20 @@ class PurchaseOrderForm
                                 ->numeric()
                                 ->prefix('Rp')
                                 ->minValue(0)
+                                ->default(0)
                                 ->reactive()
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                    $quantity = $get('ordered_quantity') ?? 0;
-                                    $set('subtotal', $quantity * $state);
+                                    $quantity = floatval($get('ordered_quantity') ?? 0);
+                                    $unitPrice = floatval($state ?? 0);
+                                    $set('subtotal', $quantity * $unitPrice);
                                 })
                                 ->columnSpan(4),
 
                             Forms\Components\Placeholder::make('subtotal')
                                 ->label('Subtotal')
                                 ->content(function (callable $get): string {
-                                    $quantity = $get('ordered_quantity') ?? 0;
-                                    $unitPrice = $get('unit_price') ?? 0;
+                                    $quantity = floatval($get('ordered_quantity') ?? 0);
+                                    $unitPrice = floatval($get('unit_price') ?? 0);
                                     $subtotal = $quantity * $unitPrice;
 
                                     return 'Rp '.number_format($subtotal, 0, ',', '.');
