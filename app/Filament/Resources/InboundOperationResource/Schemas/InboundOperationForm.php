@@ -24,7 +24,7 @@ class InboundOperationForm
                         ->placeholder('Auto-generated')
                         ->helperText('Inbound number will be generated automatically')
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Select::make('purchase_order_id')
                         ->label('Purchase Order')
                         ->options(function () {
@@ -32,16 +32,16 @@ class InboundOperationForm
                                 PurchaseOrderStatus::SENT,
                                 PurchaseOrderStatus::PARTIALLY_RECEIVED,
                             ])
-                            ->with('supplier')
-                            ->get()
-                            ->mapWithKeys(function ($po) {
-                                return [$po->id => $po->po_number . ' - ' . $po->supplier->name];
-                            });
+                                ->with('supplier')
+                                ->get()
+                                ->mapWithKeys(function ($po) {
+                                    return [$po->id => $po->po_number.' - '.$po->supplier->name];
+                                });
                         })
                         ->searchable()
                         ->required()
                         ->reactive()
-                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                        ->afterStateUpdated(function ($state, callable $set) {
                             if ($state) {
                                 $purchaseOrder = PurchaseOrder::with('items.product.variants', 'items.productVariant')->find($state);
                                 if ($purchaseOrder) {
@@ -50,7 +50,7 @@ class InboundOperationForm
                                             'product_id' => $item->product_id,
                                             'product_variant_id' => $item->product_variant_id,
                                             'ordered_quantity' => $item->ordered_quantity,
-                                            'received_quantity' => $item->ordered_quantity, // Default to ordered quantity
+                                            'received_quantity' => $item->ordered_quantity,
                                         ];
                                     })->toArray();
                                     $set('items', $items);
@@ -61,20 +61,20 @@ class InboundOperationForm
                         })
                         ->disabled(fn ($context) => $context === 'edit')
                         ->columnSpan(1),
-                    
+
                     Forms\Components\DateTimePicker::make('received_date')
                         ->label('Received Date')
                         ->required()
                         ->default(now())
                         ->native(false)
                         ->columnSpan(1),
-                    
+
                     Forms\Components\Textarea::make('notes')
                         ->label('Notes')
                         ->rows(3)
                         ->columnSpanFull(),
                 ])
-                ->columns(2),
+                ->columns(1),
 
             Section::make('Received Items')
                 ->schema([
@@ -83,20 +83,21 @@ class InboundOperationForm
                         ->schema([
                             Forms\Components\Select::make('product_id')
                                 ->label('Product')
-                                ->options(Product::query()->pluck('name', 'id'))
+                                ->options(fn () => Product::query()->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
                                 ->disabled()
                                 ->dehydrated()
-                                ->columnSpan(1),
-                            
+                                ->columnSpan(3),
+
                             Forms\Components\Select::make('product_variant_id')
                                 ->label('Variant')
                                 ->options(function (callable $get) {
                                     $productId = $get('product_id');
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return [];
                                     }
+
                                     return ProductVariant::where('product_id', $productId)
                                         ->pluck('name', 'id');
                                 })
@@ -104,8 +105,8 @@ class InboundOperationForm
                                 ->disabled()
                                 ->dehydrated()
                                 ->visible(fn (callable $get) => $get('product_variant_id') !== null)
-                                ->columnSpan(1),
-                            
+                                ->columnSpan(2),
+
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Ordered Qty')
                                 ->numeric()
@@ -115,12 +116,14 @@ class InboundOperationForm
                                     $productId = $get('product_id');
                                     if ($productId) {
                                         $product = Product::find($productId);
+
                                         return $product ? $product->unit : '';
                                     }
+
                                     return '';
                                 })
-                                ->columnSpan(1),
-                            
+                                ->columnSpan(3),
+
                             Forms\Components\TextInput::make('received_quantity')
                                 ->label('Received Qty')
                                 ->required()
@@ -130,29 +133,31 @@ class InboundOperationForm
                                     $productId = $get('product_id');
                                     if ($productId) {
                                         $product = Product::find($productId);
+
                                         return $product ? $product->unit : '';
                                     }
+
                                     return '';
                                 })
                                 ->helperText('Enter the actual quantity received')
-                                ->columnSpan(1),
-                            
+                                ->columnSpan(3),
+
                             Forms\Components\Placeholder::make('variance')
                                 ->label('Variance')
                                 ->content(function (callable $get): string {
                                     $ordered = $get('ordered_quantity') ?? 0;
                                     $received = $get('received_quantity') ?? 0;
                                     $variance = $received - $ordered;
-                                    
+
                                     if ($variance > 0) {
-                                        return '+' . $variance . ' (Surplus)';
+                                        return '+'.$variance.' (Surplus)';
                                     } elseif ($variance < 0) {
-                                        return $variance . ' (Shortage)';
+                                        return $variance.' (Shortage)';
                                     } else {
                                         return '0 (Match)';
                                     }
                                 })
-                                ->columnSpan(1),
+                                ->columnSpan(3),
                         ])
                         ->columns(6)
                         ->defaultItems(0)
@@ -160,17 +165,19 @@ class InboundOperationForm
                         ->deletable(false)
                         ->reorderable(false)
                         ->collapsible()
-                        ->itemLabel(fn (array $state): ?string => 
-                            isset($state['product_id']) 
-                                ? (function() use ($state) {
+                        ->itemLabel(fn (array $state): ?string => isset($state['product_id'])
+                                ? (function () use ($state) {
                                     $product = Product::find($state['product_id']);
-                                    if (!$product) return null;
-                                    
+                                    if (! $product) {
+                                        return null;
+                                    }
+
                                     if (isset($state['product_variant_id']) && $state['product_variant_id']) {
                                         $variant = ProductVariant::find($state['product_variant_id']);
-                                        return $variant ? $product->name . ' - ' . $variant->name : $product->name;
+
+                                        return $variant ? $product->name.' - '.$variant->name : $product->name;
                                     }
-                                    
+
                                     return $product->name;
                                 })()
                                 : null
@@ -178,7 +185,7 @@ class InboundOperationForm
                         ->columnSpanFull(),
                 ])
                 ->collapsible()
-                ->visible(fn (callable $get) => !empty($get('purchase_order_id'))),
+                ->visible(fn (callable $get) => ! empty($get('purchase_order_id'))),
         ]);
     }
 }

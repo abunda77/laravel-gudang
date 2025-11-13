@@ -43,7 +43,7 @@ class ProductForm
                             Forms\Components\Textarea::make('description')
                                 ->rows(2),
                         ])
-                        ->columnSpan(1),
+                        ->columnSpan(2),
                 ])
                 ->columns(1),
 

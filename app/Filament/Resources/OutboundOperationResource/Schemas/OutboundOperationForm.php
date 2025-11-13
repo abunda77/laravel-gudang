@@ -41,15 +41,13 @@ class OutboundOperationForm
                         ->searchable()
                         ->required()
                         ->reactive()
-                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                        ->afterStateUpdated(function ($state, callable $set) {
                             if ($state) {
                                 $salesOrder = SalesOrder::with('items.product.variants', 'items.productVariant')->find($state);
                                 if ($salesOrder) {
-                                    // Auto-load items from sales order
                                     $items = $salesOrder->items->map(function ($item) {
                                         $stockService = app(StockMovementService::class);
 
-                                        // Get stock for variant or product
                                         if ($item->product_variant_id) {
                                             $currentStock = $stockService->getCurrentStockForVariant($item->productVariant);
                                         } else {
@@ -71,8 +69,8 @@ class OutboundOperationForm
                             }
                         })
                         ->disableOptionWhen(function ($value) {
-                            // Disable sales orders that are already fully fulfilled
                             $salesOrder = SalesOrder::find($value);
+
                             return $salesOrder && $salesOrder->status === SalesOrderStatus::COMPLETED;
                         })
                         ->columnSpan(1),
@@ -98,7 +96,7 @@ class OutboundOperationForm
                         ->rows(3)
                         ->columnSpanFull(),
                 ])
-                ->columns(2),
+                ->columns(1),
 
             Section::make('Outbound Items')
                 ->schema([
@@ -107,35 +105,36 @@ class OutboundOperationForm
                         ->schema([
                             Forms\Components\Select::make('product_id')
                                 ->label('Product')
-                                ->options(Product::query()->pluck('name', 'id'))
+                                ->options(fn () => Product::query()->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
                                 ->disabled()
                                 ->dehydrated()
-                                ->columnSpan(1),
+                                ->columnSpan(3),
 
                             Forms\Components\Select::make('product_variant_id')
                                 ->label('Variant')
                                 ->options(function (callable $get) {
                                     $productId = $get('product_id');
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return [];
                                     }
+
                                     return ProductVariant::where('product_id', $productId)
                                         ->pluck('name', 'id');
                                 })
                                 ->searchable()
                                 ->disabled()
                                 ->dehydrated()
-                                ->visible(fn(callable $get) => $get('product_variant_id') !== null)
-                                ->columnSpan(1),
+                                ->visible(fn (callable $get) => $get('product_variant_id') !== null)
+                                ->columnSpan(2),
 
                             Forms\Components\TextInput::make('ordered_quantity')
                                 ->label('Ordered Qty')
                                 ->numeric()
-                                ->disabled(false)
+                                ->disabled()
                                 ->dehydrated(false)
-                                ->columnSpan(1),
+                                ->columnSpan(2),
 
                             Forms\Components\ViewField::make('available_stock')
                                 ->label('Available Stock')
@@ -144,23 +143,22 @@ class OutboundOperationForm
                                     $productId = $get('product_id');
                                     $variantId = $get('product_variant_id');
 
-                                    if (!$productId) {
+                                    if (! $productId) {
                                         return ['display' => '-'];
                                     }
 
                                     $stockService = app(StockMovementService::class);
                                     $shippedQty = $get('shipped_quantity') ?? 0;
 
-                                    // Get stock for variant or product
                                     if ($variantId) {
                                         $variant = ProductVariant::find($variantId);
-                                        if (!$variant) {
+                                        if (! $variant) {
                                             return ['display' => '-'];
                                         }
                                         $currentStock = $stockService->getCurrentStockForVariant($variant);
                                     } else {
                                         $product = Product::find($productId);
-                                        if (!$product) {
+                                        if (! $product) {
                                             return ['display' => '-'];
                                         }
                                         $currentStock = $stockService->getCurrentStock($product);
@@ -173,7 +171,7 @@ class OutboundOperationForm
                                         'sufficient' => $currentStock >= $shippedQty,
                                     ];
                                 })
-                                ->columnSpan(1),
+                                ->columnSpan(3),
 
                             Forms\Components\TextInput::make('shipped_quantity')
                                 ->label('Shipped Qty')
@@ -182,12 +180,12 @@ class OutboundOperationForm
                                 ->minValue(1)
                                 ->default(1)
                                 ->reactive()
-                                ->columnSpan(1),
+                                ->columnSpan(3),
 
                             Forms\Components\Checkbox::make('confirmed')
                                 ->label('Confirmed')
                                 ->default(true)
-                                ->columnSpan(1),
+                                ->columnSpan(3),
                         ])
                         ->columns(6)
                         ->defaultItems(0)
@@ -195,16 +193,17 @@ class OutboundOperationForm
                         ->deletable(false)
                         ->reorderable(false)
                         ->collapsible()
-                        ->itemLabel(
-                            fn(array $state): ?string =>
-                            isset($state['product_id'])
+                        ->itemLabel(fn (array $state): ?string => isset($state['product_id'])
                                 ? (function () use ($state) {
                                     $product = Product::find($state['product_id']);
-                                    if (!$product) return null;
+                                    if (! $product) {
+                                        return null;
+                                    }
 
                                     if (isset($state['product_variant_id']) && $state['product_variant_id']) {
                                         $variant = ProductVariant::find($state['product_variant_id']);
-                                        return $variant ? $product->name . ' - ' . $variant->name : $product->name;
+
+                                        return $variant ? $product->name.' - '.$variant->name : $product->name;
                                     }
 
                                     return $product->name;
