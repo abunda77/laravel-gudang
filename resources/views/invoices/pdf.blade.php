@@ -151,7 +151,7 @@
         <div class="header-left">
             <img src="{{ public_path('images/logo_light.png') }}" alt="Logo" class="logo">
             <div class="company-info">              
-                <p>Jl. Wisma Widah Kulon No.101</p>
+                <p>Jl. Wisma Widah Kulon Blok A No.101</p>
                 <p>Surabaya, Jawa Timur</p>
                 <p>Phone: +62 878-7750-0088</p>
             </div>
@@ -228,6 +228,12 @@
                 <td class="text-right"><strong>Rp {{ number_format($invoice->total_amount, 0, ',', '.') }}</strong></td>
             </tr>
         </table>
+    </div>
+
+    <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 13px; color: #333;">Rek Pembayaran :</h3>
+        <p style="margin: 3px 0; font-size: 11px; font-weight: bold; color: #333;">BCA 1300-770-220</p>
+        <p style="margin: 3px 0; font-size: 11px; color: #666;">a.n Bosco Mandiri</p>
     </div>
 
     <div class="footer">
