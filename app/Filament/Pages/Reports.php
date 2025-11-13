@@ -53,6 +53,7 @@ class Reports extends Page implements HasTable
                         ->options([
                             'sales' => 'Sales Report',
                             'purchase' => 'Purchase Report',
+                            'product' => 'Product Report',
                             'stock_valuation' => 'Stock Valuation Report',
                             'low_stock' => 'Low Stock Report',
                         ])
@@ -122,6 +123,7 @@ class Reports extends Page implements HasTable
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ]),
+            'product' => $reportService->getProductReport(),
             'stock_valuation' => $reportService->getStockValuationReport(),
             'low_stock' => [
                 'items' => $reportService->getLowStockProducts(),
@@ -153,6 +155,7 @@ class Reports extends Page implements HasTable
         $reportTypeLabels = [
             'sales' => 'Sales Report',
             'purchase' => 'Purchase Report',
+            'product' => 'Product Report',
             'stock_valuation' => 'Stock Valuation Report',
             'low_stock' => 'Low Stock Report',
         ];
@@ -183,6 +186,7 @@ class Reports extends Page implements HasTable
                     ->color(fn(string $state): string => match ($state) {
                         'sales' => 'success',
                         'purchase' => 'info',
+                        'product' => 'primary',
                         'stock_valuation' => 'warning',
                         'low_stock' => 'danger',
                         default => 'gray',
@@ -190,6 +194,7 @@ class Reports extends Page implements HasTable
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         'sales' => 'manual',
                         'purchase' => 'manual',
+                        'product' => 'manual',
                         'stock_valuation' => 'manual',
                         'low_stock' => 'manual',
                         default => 'manual',

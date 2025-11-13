@@ -364,4 +364,84 @@ class ReportService
             throw new \RuntimeException('Failed to generate purchase report: ' . $e->getMessage(), 0, $e);
         }
     }
+
+    /**
+     * Generate product report with stock and valuation information.
+     *
+     * @param array $filters Available filters: category_id, low_stock_only
+     * @return array
+     * @throws \RuntimeException
+     */
+    public function getProductReport(array $filters = []): array
+    {
+        try {
+            $query = Product::with(['category']);
+
+            // Category filter
+            if (isset($filters['category_id'])) {
+                $query->where('category_id', $filters['category_id']);
+            }
+
+            $products = $query->get();
+
+            // Filter for low stock if requested
+            if (isset($filters['low_stock_only']) && $filters['low_stock_only']) {
+                $products = $products->filter(function ($product) {
+                    return $product->isLowStock();
+                });
+            }
+
+            $items = $products->map(function ($product) {
+                $currentStock = $product->getCurrentStock();
+                $purchaseValue = $currentStock * $product->purchase_price;
+                $sellingValue = $currentStock * $product->selling_price;
+                $potentialProfit = $sellingValue - $purchaseValue;
+
+                return [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'category' => $product->category?->name,
+                    'unit' => $product->unit,
+                    'current_stock' => $currentStock,
+                    'minimum_stock' => $product->minimum_stock,
+                    'purchase_price' => $product->purchase_price,
+                    'selling_price' => $product->selling_price,
+                    'purchase_value' => $purchaseValue,
+                    'selling_value' => $sellingValue,
+                    'potential_profit' => $potentialProfit,
+                    'rack_location' => $product->rack_location,
+                    'is_low_stock' => $product->isLowStock(),
+                ];
+            });
+
+            $totalPurchaseValue = $items->sum('purchase_value');
+            $totalSellingValue = $items->sum('selling_value');
+            $totalPotentialProfit = $items->sum('potential_profit');
+            $lowStockCount = $items->where('is_low_stock', true)->count();
+
+            Log::info('Product report generated successfully', [
+                'filters' => $filters,
+                'total_products' => $items->count(),
+                'low_stock_count' => $lowStockCount,
+                'total_purchase_value' => $totalPurchaseValue,
+            ]);
+
+            return [
+                'items' => $items,
+                'total_products' => $items->count(),
+                'low_stock_count' => $lowStockCount,
+                'total_purchase_value' => $totalPurchaseValue,
+                'total_selling_value' => $totalSellingValue,
+                'total_potential_profit' => $totalPotentialProfit,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Failed to generate product report', [
+                'filters' => $filters,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw new \RuntimeException('Failed to generate product report: ' . $e->getMessage(), 0, $e);
+        }
+    }
 }
