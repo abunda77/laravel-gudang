@@ -211,7 +211,9 @@ class PurchaseOrderForm
                         ->content(function (callable $get): string {
                             $items = $get('items') ?? [];
                             $total = collect($items)->sum(function ($item) {
-                                return ($item['ordered_quantity'] ?? 0) * ($item['unit_price'] ?? 0);
+                                $quantity = floatval($item['ordered_quantity'] ?? 0);
+                                $unitPrice = floatval($item['unit_price'] ?? 0);
+                                return $quantity * $unitPrice;
                             });
 
                             return 'Rp '.number_format($total, 0, ',', '.');
