@@ -7,32 +7,34 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 9px;
+            line-height: 1.2;
+            margin: 10px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             border-bottom: 2px solid #333;
-            padding-bottom: 10px;
+            padding-bottom: 5px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 14px;
         }
 
         .header p {
-            margin: 5px 0;
+            margin: 2px 0;
             color: #666;
+            font-size: 8px;
         }
 
         .summary {
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             background: #fff8e1;
-            padding: 15px;
-            border-radius: 5px;
+            padding: 8px;
+            border-radius: 3px;
             border: 1px solid #ffc107;
         }
 
@@ -41,21 +43,22 @@
         }
 
         .summary td {
-            padding: 8px 0;
+            padding: 3px 0;
+            font-size: 9px;
         }
 
         .summary td:first-child {
             font-weight: bold;
-            width: 200px;
+            width: 150px;
         }
 
         .summary td:last-child {
             text-align: right;
-            font-size: 16px;
+            font-size: 10px;
         }
 
         .summary .total-value {
-            font-size: 20px;
+            font-size: 12px;
             color: #f57c00;
             font-weight: bold;
         }
@@ -63,20 +66,22 @@
         table.products {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         table.products th {
             background: #1976d2;
             color: white;
-            padding: 8px;
+            padding: 4px 5px;
             text-align: left;
             font-weight: bold;
+            font-size: 9px;
         }
 
         table.products td {
-            padding: 6px 8px;
+            padding: 3px 5px;
             border-bottom: 1px solid #ddd;
+            font-size: 8px;
         }
 
         table.products tr:nth-child(even) {
@@ -100,9 +105,9 @@
         }
 
         .badge {
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 2px;
+            font-size: 7px;
             font-weight: bold;
         }
 
@@ -122,18 +127,24 @@
         }
 
         .footer {
-            margin-top: 30px;
+            margin-top: 15px;
             text-align: center;
-            font-size: 10px;
+            font-size: 7px;
             color: #666;
             border-top: 1px solid #ddd;
-            padding-top: 10px;
+            padding-top: 5px;
         }
 
         .total-row {
             background: #fff8e1 !important;
             font-weight: bold;
             border-top: 2px solid #333;
+        }
+
+        h3 {
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 11px;
         }
     </style>
 </head>
