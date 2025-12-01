@@ -26,6 +26,8 @@ class VehicleForm
                         ->options([
                             'truck' => 'Truck',
                             'van' => 'Van',
+                            'motor' => 'Motor',
+                            'mobil' => 'Mobil',
                         ])
                         ->required()
                         ->native(false)
