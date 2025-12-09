@@ -138,3 +138,7 @@ frankenphp-worker.php
 rr
 .rr.yaml
 /bootstrap/cache/.gitignore
+
+**/caddy
+frankenphp
+frankenphp-worker.php
