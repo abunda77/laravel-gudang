@@ -29,7 +29,8 @@ Use this checklist to ensure all critical steps are completed before and after d
 
 -   [ ] `APP_ENV=production`
 -   [ ] `APP_DEBUG=false`
--   [ ] `APP_URL` set to production domain
+-   [ ] `APP_URL` set to production domain (HTTPS)
+-   [ ] `FORCE_HTTPS=true` configured
 -   [ ] Database credentials configured
 -   [ ] Redis credentials configured
 -   [ ] Mail server configured
@@ -66,6 +67,8 @@ Use this checklist to ensure all critical steps are completed before and after d
 -   [ ] Storage and cache directories writable
 -   [ ] Directory listing disabled
 -   [ ] SSL/TLS properly configured
+-   [ ] HTTPS force enabled (`FORCE_HTTPS=true`)
+-   [ ] Trusted proxies configured in `bootstrap/app.php`
 -   [ ] Security headers configured in web server
 -   [ ] Database password is strong and secure
 -   [ ] Redis password configured (if exposed)
@@ -85,9 +88,12 @@ Use this checklist to ensure all critical steps are completed before and after d
 
 -   [ ] Application accessible via HTTPS
 -   [ ] HTTP redirects to HTTPS
+-   [ ] No mixed content warnings in browser console
+-   [ ] All assets (CSS, JS, images) load via HTTPS
 -   [ ] Admin panel accessible at `/admin`
 -   [ ] Can login with admin credentials
 -   [ ] All Filament resources load correctly
+-   [ ] Filament components (date picker, select, textarea) working properly
 -   [ ] Dashboard widgets display data
 -   [ ] File uploads working
 -   [ ] PDF generation working
@@ -229,10 +235,10 @@ If deployment fails:
 
 ## Notes
 
-Date Deployed: ******\_\_\_******
-Deployed By: ********\_********
-Version/Commit: ******\_\_******
-Issues Encountered: ****\_\_****
+Date Deployed: **\*\***\_\_\_**\*\***
+Deployed By: **\*\*\*\***\_**\*\*\*\***
+Version/Commit: **\*\***\_\_**\*\***
+Issues Encountered: \***\*\_\_\*\***
 
 ---
 
